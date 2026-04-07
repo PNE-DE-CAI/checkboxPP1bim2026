@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Checklist Escolas · URE Caieiras</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -43,7 +43,7 @@
         .status-icon { width: 10%; text-align: center; }
         .back-btn { background: #6c757d; border: none; padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 8px; }
         .readonly-checkbox { opacity: 0.6; pointer-events: none; }
-        .refresh-btn { background: #0a2f6c; margin-left: 10px; }
+        .refresh-btn { background: #0a2f6c; border: none; padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; margin-left: 10px; display: inline-flex; align-items: center; gap: 8px; }
         footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #b4c8e0; font-size: 0.8rem; border-top: 1px solid #2c4c6e; }
         @media (max-width: 700px) { .container { padding: 12px; } .school-row { flex-direction: column; align-items: flex-start; gap: 8px; } .school-name, .school-progress, .status-icon { width: 100%; } }
     </style>
@@ -121,7 +121,7 @@
         <div id="pecMainView">
             <div class="card">
                 <h2><i class="fas fa-chart-line"></i> Dashboard de Progresso das Escolas 
-                    <button id="refreshDashboardBtn" class="save-btn refresh-btn" style="padding: 4px 12px; font-size: 0.8rem;"><i class="fas fa-sync-alt"></i> Recarregar</button>
+                    <button id="refreshDashboardBtn" class="refresh-btn"><i class="fas fa-sync-alt"></i> Recarregar</button>
                 </h2>
                 <div id="pecDashboard"></div>
             </div>
@@ -159,7 +159,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_XR4ym7Nz1sL_7Ap5kpmzgw_7mxWANuI';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ================================================================
-        
 
         const escolasList = [
             "E.E. ADAIL JARBAS DUCLOS", "E.E. AFONSO MORENO", "E.E. ALADINO POLON", "E.E. ALBERTO GRAF – CAPITÃO",
@@ -216,11 +215,8 @@
         let activeTab = 'prova';
         let activeWeek = 1;
 
-        // Variáveis para visualização detalhada do PEC
         let selectedSchoolName = null;
         let selectedSchoolData = null;
-        let detailActiveTab = 'prova';
-        let detailActiveWeek = 1;
 
         function populateEscolas() {
             const select = document.getElementById('cadastroEscola');
@@ -366,7 +362,10 @@
             schoolsData.forEach(s => map.set(s.escola_nome, s.checklist_data));
 
             const dashboardDiv = document.getElementById('pecDashboard');
+            if (!dashboardDiv) return;
             dashboardDiv.innerHTML = '<h3>📋 Clique em uma escola para ver os detalhes</h3>';
+            
+            // Percorre TODAS as escolas da lista fixa
             for (const escola of escolasList) {
                 const data = map.get(escola) || { prova: {}, tarefa: {} };
                 const { percent } = computeProgressForSchool(data);
@@ -375,7 +374,7 @@
                 const statusText = hasData ? (percent === 100 ? 'Completo' : `${percent}% concluído`) : 'Não iniciado';
                 const row = document.createElement('div');
                 row.className = 'school-row';
-                row.onclick = () => showSchoolDetail(escola);
+                row.onclick = () => showSchoolDetail(escola, data);
                 row.innerHTML = `
                     <div class="school-name">${escola}</div>
                     <div class="school-progress">
@@ -388,40 +387,30 @@
             }
         }
 
-        async function showSchoolDetail(escolaNome) {
-            // Buscar dados atualizados da escola ao clicar
-            const schoolsData = await fetchAllSchoolsData();
-            const schoolRecord = schoolsData.find(s => s.escola_nome === escolaNome);
-            selectedSchoolData = schoolRecord ? schoolRecord.checklist_data : { prova: {}, tarefa: {} };
+        async function showSchoolDetail(escolaNome, checklistData) {
             selectedSchoolName = escolaNome;
+            selectedSchoolData = checklistData || { prova: {}, tarefa: {} };
             document.getElementById('detailSchoolName').innerHTML = `<i class="fas fa-school"></i> ${escolaNome} - Checklist (somente leitura)`;
             document.getElementById('pecMainView').style.display = 'none';
             document.getElementById('pecSchoolDetailView').style.display = 'block';
-            // Resetar abas e semanas
-            detailActiveTab = 'prova';
-            detailActiveWeek = 1;
-            renderDetailWeeks();
             renderSchoolDetailChecklists();
-            // Atualizar abas ativas visualmente
-            document.querySelectorAll('.detail-tab').forEach(btn => {
-                if (btn.dataset.detailTab === detailActiveTab) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-            document.getElementById('detailProvaPanel').style.display = 'block';
-            document.getElementById('detailTarefaPanel').style.display = 'none';
         }
 
         function renderSchoolDetailChecklists() {
-            const type = detailActiveTab;
-            const weekKey = `semana${detailActiveWeek}`;
-            const items = checklistsData[type][weekKey] || [];
-            const saved = selectedSchoolData?.[type]?.[weekKey] || {};
+            if (typeof window.detailActiveTab === 'undefined') window.detailActiveTab = 'prova';
+            if (typeof window.detailActiveWeek === 'undefined') window.detailActiveWeek = 1;
+            
+            const typeDetail = window.detailActiveTab;
+            const week = window.detailActiveWeek;
+            const weekKey = `semana${week}`;
+            const items = checklistsData[typeDetail][weekKey] || [];
+            const saved = selectedSchoolData?.[typeDetail]?.[weekKey] || {};
             
             const provaContainer = document.getElementById('detailProvaChecklist');
             const tarefaContainer = document.getElementById('detailTarefaChecklist');
             if (!provaContainer || !tarefaContainer) return;
             
-            if (type === 'prova') {
+            if (typeDetail === 'prova') {
                 provaContainer.innerHTML = '';
                 items.forEach((item, idx) => {
                     const isChecked = saved[idx] === true;
@@ -433,8 +422,6 @@
                     `;
                     provaContainer.appendChild(div);
                 });
-                // Limpa o outro container
-                tarefaContainer.innerHTML = '';
             } else {
                 tarefaContainer.innerHTML = '';
                 items.forEach((item, idx) => {
@@ -447,7 +434,6 @@
                     `;
                     tarefaContainer.appendChild(div);
                 });
-                provaContainer.innerHTML = '';
             }
         }
 
@@ -461,13 +447,13 @@
             weeks.forEach(w => {
                 const btn1 = document.createElement('button');
                 btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
-                btn1.className = `week-btn ${detailActiveTab === 'prova' && detailActiveWeek === w ? 'active' : ''}`;
-                btn1.onclick = () => { detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
+                btn1.className = `week-btn ${window.detailActiveTab === 'prova' && window.detailActiveWeek === w ? 'active' : ''}`;
+                btn1.onclick = () => { window.detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
                 provaContainer.appendChild(btn1);
                 const btn2 = document.createElement('button');
                 btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
-                btn2.className = `week-btn ${detailActiveTab === 'tarefa' && detailActiveWeek === w ? 'active' : ''}`;
-                btn2.onclick = () => { detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
+                btn2.className = `week-btn ${window.detailActiveTab === 'tarefa' && window.detailActiveWeek === w ? 'active' : ''}`;
+                btn2.onclick = () => { window.detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
                 tarefaContainer.appendChild(btn2);
             });
         }
@@ -477,10 +463,10 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    detailActiveTab = btn.dataset.detailTab;
-                    document.getElementById('detailProvaPanel').style.display = detailActiveTab === 'prova' ? 'block' : 'none';
-                    document.getElementById('detailTarefaPanel').style.display = detailActiveTab === 'tarefa' ? 'block' : 'none';
-                    detailActiveWeek = 1;
+                    window.detailActiveTab = btn.dataset.detailTab;
+                    document.getElementById('detailProvaPanel').style.display = window.detailActiveTab === 'prova' ? 'block' : 'none';
+                    document.getElementById('detailTarefaPanel').style.display = window.detailActiveTab === 'tarefa' ? 'block' : 'none';
+                    window.detailActiveWeek = 1;
                     renderDetailWeeks();
                     renderSchoolDetailChecklists();
                 };
@@ -503,7 +489,6 @@
                 options: { data: { escola_nome: escola, role: 'school' } }
             });
             if (error) { alert('Erro: ' + error.message); return false; }
-            // Criar registro na tabela checklist_escolas
             await supabase.from('checklist_escolas').insert([{
                 user_id: data.user.id,
                 escola_nome: escola,
@@ -571,6 +556,9 @@
                 document.getElementById('pecPanel').style.display = 'block';
                 document.getElementById('userInfo').style.display = 'flex';
                 initDetailTabs();
+                window.detailActiveTab = 'prova';
+                window.detailActiveWeek = 1;
+                renderDetailWeeks();
             }
         };
         document.getElementById('logoutBtn').onclick = async () => {
@@ -627,6 +615,9 @@
                         document.getElementById('userInfo').style.display = 'flex';
                         document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${session.user.email}`;
                         initDetailTabs();
+                        window.detailActiveTab = 'prova';
+                        window.detailActiveWeek = 1;
+                        renderDetailWeeks();
                     });
                 } else {
                     currentRole = 'school';
