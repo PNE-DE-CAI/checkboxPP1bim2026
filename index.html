@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Gestão de Checklists · URE Caieiras</title>
+    <title>URE Caieiras · Checklists 2026 (Supabase)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -47,6 +47,7 @@
         .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e4e9; }
         .tab-button { background: none; border: none; padding: 8px 16px; font-weight: 600; cursor: pointer; color: #666; }
         .tab-button.active { color: #0a2f6c; border-bottom: 2px solid #d32f2f; }
+        .error-message { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 12px; margin-bottom: 16px; border-left: 4px solid #d32f2f; }
         footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #b4c8e0; font-size: 0.8rem; }
         @media (max-width: 700px) { .school-grid { grid-template-columns: 1fr; } }
     </style>
@@ -64,37 +65,33 @@
         </div>
     </div>
 
-    <!-- Tela de Login -->
     <div id="loginPanel">
         <div class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
             <h2>🔐 Acesso Administrativo</h2>
             <input type="email" id="loginEmail" placeholder="E-mail" value="urecai2026@urecaieiras.com" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
             <input type="password" id="loginPassword" placeholder="Senha" value="2026Ure" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
             <button id="doLoginBtn" class="btn-primary" style="width:100%; justify-content: center;">Entrar</button>
+            <p style="margin-top: 12px; font-size: 12px; color: #ffec9e;">🔐 Dados salvos no Supabase</p>
         </div>
     </div>
 
-    <!-- Painel Principal (após login) -->
     <div id="mainPanel" style="display: none;">
+        <div id="globalError" class="error-message" style="display: none;"></div>
         <div class="card">
             <h2><i class="fas fa-chart-line"></i> Dashboard de Progresso</h2>
             <div style="overflow-x: auto;">
                 <table class="dashboard-table" id="dashboardTable">
-                    <thead>
-                        <tr><th>Escola</th><th>Progresso</th><th>Status</th></tr>
-                    </thead>
+                    <thead><tr><th>Escola</th><th>Progresso</th><th>Status</th></tr></thead>
                     <tbody id="dashboardBody"></tbody>
                 </table>
             </div>
         </div>
-
         <div class="card">
             <h2><i class="fas fa-school"></i> Escolas</h2>
             <div class="school-grid" id="schoolGrid"></div>
         </div>
     </div>
 
-    <!-- Modal para editar checklists de uma escola -->
     <div id="schoolModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -112,24 +109,22 @@
                 <div id="modalTarefaChecklist"></div>
             </div>
             <div style="margin-top: 20px; text-align: right;">
-                <button id="saveModalChecklist" class="btn-primary"><i class="fas fa-save"></i> Salvar</button>
+                <button id="saveModalChecklist" class="btn-primary"><i class="fas fa-save"></i> Salvar no Supabase</button>
             </div>
         </div>
     </div>
 
-    <footer>Checklist oficial 2026 · URE Caieiras</footer>
+    <footer>Checklist oficial 2026 · URE Caieiras · Dados persistentes no Supabase</footer>
 </div>
 
 <script>
     (function() {
-        if (window._checklistInitialized) return;
-        window._checklistInitialized = true;
-
-// ==================== CONFIGURAÇÃO SUPABASE ====================
+        // ---------- CONFIG SUPABASE ----------
         const SUPABASE_URL = 'https://mrpiwlnzbksjvcaxerrr.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_XR4ym7Nz1sL_7Ap5kpmzgw_7mxWANuI';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// ================================================================
+
+        // Lista de escolas
         const escolasList = [
             "E.E. ADAIL JARBAS DUCLOS", "E.E. AFONSO MORENO", "E.E. ALADINO POLON", "E.E. ALBERTO GRAF – CAPITÃO",
             "E.E. ALBINO FIORE", "E.E. ALFRIED THEODOR WEISZFLOG", "E.E. ANA MARIA GARRIDO ORLANDIN – PROF.ª",
@@ -158,6 +153,7 @@
             "E.E. ZILTON BICUDO – PROF.", "E.E. OLINDO DÁRTORA – DR."
         ];
 
+        // Datas e checklists fixos
         const weekDates = {
             prova: { 1: "06/04 a 10/04", 2: "13/04 a 17/04", 3: "20/04 a 24/04", 4: "27/04 a 30/04" },
             tarefa: { 1: "06/04 a 13/04", 2: "14/04 a 20/04", 3: "21/04 a 27/04", 4: "28/04 a 30/04" }
@@ -178,10 +174,19 @@
             }
         };
 
+        // ---------- ESTADO ----------
         let currentUser = null;
-        let schoolsDataMap = new Map(); // escola_nome -> { checklist_data, user_id (opcional) }
+        let schoolsMap = new Map(); // escola_nome -> { id, checklist_data }
 
-        // Funções de cálculo de progresso
+        // Função auxiliar para mostrar erro global
+        function showGlobalError(message) {
+            const errorDiv = document.getElementById('globalError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => { errorDiv.style.display = 'none'; }, 8000);
+        }
+
+        // Calcular progresso
         function computeProgress(checklistData) {
             let total = 0, checked = 0;
             for (let type of ['prova', 'tarefa']) {
@@ -198,71 +203,86 @@
             return total === 0 ? 0 : Math.round((checked / total) * 100);
         }
 
-        // Carregar todos os dados das escolas (tabela checklist_escolas)
+        // Carregar todas as escolas do Supabase
         async function loadAllSchoolsData() {
-            const { data, error } = await supabase.from('checklist_escolas').select('*');
+            if (!currentUser) return [];
+            const { data, error } = await supabase
+                .from('checklist_escolas')
+                .select('id, escola_nome, checklist_data');
             if (error) {
-                console.error(error);
+                console.error('Erro ao carregar:', error);
+                showGlobalError(`Erro ao carregar dados do Supabase: ${error.message}. Verifique a tabela e as políticas RLS.`);
                 return [];
             }
-            return data;
+            return data || [];
         }
 
         // Salvar dados de uma escola (upsert)
         async function saveSchoolData(escolaNome, checklistData) {
-            // Verifica se já existe registro para essa escola
-            const existing = schoolsDataMap.get(escolaNome);
+            if (!currentUser) throw new Error('Usuário não autenticado');
+
+            const existing = schoolsMap.get(escolaNome);
             if (existing && existing.id) {
-                // Atualiza
-                const { error } = await supabase.from('checklist_escolas')
+                // UPDATE
+                const { error } = await supabase
+                    .from('checklist_escolas')
                     .update({ checklist_data: checklistData, updated_at: new Date() })
                     .eq('id', existing.id);
                 if (error) throw error;
                 existing.checklist_data = checklistData;
             } else {
-                // Insere novo
-                const { data, error } = await supabase.from('checklist_escolas')
-                    .insert([{ escola_nome: escolaNome, checklist_data: checklistData, user_id: currentUser.id }])
-                    .select();
+                // INSERT
+                const { data, error } = await supabase
+                    .from('checklist_escolas')
+                    .insert([{
+                        escola_nome: escolaNome,
+                        checklist_data: checklistData,
+                        user_id: currentUser.id
+                    }])
+                    .select('id');
                 if (error) throw error;
-                if (data && data[0]) {
-                    schoolsDataMap.set(escolaNome, { id: data[0].id, checklist_data: checklistData });
-                } else {
-                    // fallback: apenas guarda localmente
-                    schoolsDataMap.set(escolaNome, { checklist_data: checklistData });
-                }
+                const newId = data?.[0]?.id;
+                schoolsMap.set(escolaNome, { id: newId, checklist_data: checklistData });
             }
+            return true;
         }
 
-        // Renderizar dashboard e cards
+        // Atualizar toda a interface
         async function refreshUI() {
-            const allData = await loadAllSchoolsData();
-            schoolsDataMap.clear();
-            allData.forEach(item => {
-                schoolsDataMap.set(item.escola_nome, { id: item.id, checklist_data: item.checklist_data });
-            });
+            if (!currentUser) return;
+            const dataFromDB = await loadAllSchoolsData();
+            schoolsMap.clear();
+            for (const item of dataFromDB) {
+                schoolsMap.set(item.escola_nome, { id: item.id, checklist_data: item.checklist_data });
+            }
+            // Garantir que todas as escolas tenham entrada no Map (mesmo sem dados no banco)
+            for (const escola of escolasList) {
+                if (!schoolsMap.has(escola)) {
+                    schoolsMap.set(escola, { checklist_data: { prova: {}, tarefa: {} } });
+                }
+            }
 
-            // Dashboard table
+            // Tabela dashboard
             const tbody = document.getElementById('dashboardBody');
             tbody.innerHTML = '';
             for (const escola of escolasList) {
-                const data = schoolsDataMap.get(escola)?.checklist_data || { prova: {}, tarefa: {} };
+                const data = schoolsMap.get(escola)?.checklist_data || { prova: {}, tarefa: {} };
                 const percent = computeProgress(data);
                 const hasData = Object.keys(data.prova).length > 0 || Object.keys(data.tarefa).length > 0;
-                const statusIcon = hasData ? (percent === 100 ? '✅ Completo' : '⏳ Em andamento') : '❌ Não iniciado';
+                const status = hasData ? (percent === 100 ? '✅ Completo' : '⏳ Em andamento') : '❌ Não iniciado';
                 const row = tbody.insertRow();
                 row.classList.add('school-row');
                 row.onclick = () => openSchoolModal(escola, data);
                 row.insertCell(0).innerText = escola;
                 row.insertCell(1).innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div><small>${percent}%</small>`;
-                row.insertCell(2).innerText = statusIcon;
+                row.insertCell(2).innerText = status;
             }
 
-            // Cards grid
+            // Cards
             const grid = document.getElementById('schoolGrid');
             grid.innerHTML = '';
             for (const escola of escolasList) {
-                const data = schoolsDataMap.get(escola)?.checklist_data || { prova: {}, tarefa: {} };
+                const data = schoolsMap.get(escola)?.checklist_data || { prova: {}, tarefa: {} };
                 const percent = computeProgress(data);
                 const card = document.createElement('div');
                 card.className = 'school-card';
@@ -276,7 +296,7 @@
             }
         }
 
-        // Modal: abrir para editar checklists de uma escola
+        // ---------- MODAL ----------
         let currentModalSchool = null;
         let currentModalData = null;
         let modalActiveTab = 'prova';
@@ -284,7 +304,7 @@
 
         function openSchoolModal(escolaNome, checklistData) {
             currentModalSchool = escolaNome;
-            currentModalData = JSON.parse(JSON.stringify(checklistData)); // cópia
+            currentModalData = JSON.parse(JSON.stringify(checklistData));
             document.getElementById('modalSchoolName').innerText = escolaNome;
             document.getElementById('schoolModal').style.display = 'flex';
             modalActiveTab = 'prova';
@@ -324,13 +344,9 @@
                 const isChecked = saved[idx] === true;
                 const div = document.createElement('div');
                 div.className = 'checklist-item';
-                div.innerHTML = `
-                    <input type="checkbox" data-week="${weekKey}" data-idx="${idx}" ${isChecked ? 'checked' : ''}>
-                    <label>${item}</label>
-                `;
+                div.innerHTML = `<input type="checkbox" data-week="${weekKey}" data-idx="${idx}" ${isChecked ? 'checked' : ''}><label>${item}</label>`;
                 container.appendChild(div);
             });
-            // Adicionar event listeners
             container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                 cb.addEventListener('change', (e) => {
                     const week = cb.dataset.week;
@@ -344,10 +360,23 @@
 
         async function saveModalData() {
             if (!currentModalSchool) return;
-            await saveSchoolData(currentModalSchool, currentModalData);
-            await refreshUI();
-            alert(`Checklists de ${currentModalSchool} salvos com sucesso!`);
-            closeModal();
+            const saveBtn = document.getElementById('saveModalChecklist');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            saveBtn.disabled = true;
+            try {
+                await saveSchoolData(currentModalSchool, currentModalData);
+                await refreshUI();
+                alert(`✅ Checklist de ${currentModalSchool} salvo com sucesso no Supabase!`);
+                closeModal();
+            } catch (err) {
+                console.error(err);
+                alert(`❌ Erro ao salvar: ${err.message}. Verifique se a tabela 'checklist_escolas' existe e as políticas RLS estão corretas.`);
+                showGlobalError(`Falha no salvamento: ${err.message}`);
+            } finally {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
         }
 
         function closeModal() {
@@ -355,30 +384,32 @@
             currentModalSchool = null;
         }
 
-        // Autenticação
+        // ---------- LOGIN ----------
         async function doLogin(email, password) {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) { alert('Erro: ' + error.message); return false; }
-            currentUser = data.user;
-            const role = data.user.user_metadata?.role;
-            if (role !== 'pec_admin') {
-                alert('Acesso negado. Você não tem permissão de administrador.');
-                await supabase.auth.signOut();
-                return false;
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                const role = data.user.user_metadata?.role;
+                if (role !== 'pec_admin') {
+                    await supabase.auth.signOut();
+                    throw new Error('Acesso negado: você não tem permissão de administrador (role = pec_admin).');
+                }
+                currentUser = data.user;
+                document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 Admin: ${email}`;
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'flex';
+                await refreshUI();
+            } catch (err) {
+                alert(`Erro de login: ${err.message}`);
             }
-            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 Admin: ${email}`;
-            document.getElementById('loginPanel').style.display = 'none';
-            document.getElementById('mainPanel').style.display = 'block';
-            document.getElementById('userInfo').style.display = 'flex';
-            await refreshUI();
-            return true;
         }
 
-        // Eventos
-        document.getElementById('doLoginBtn').onclick = async () => {
+        // ---------- EVENTOS ----------
+        document.getElementById('doLoginBtn').onclick = () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPassword').value;
-            await doLogin(email, pass);
+            doLogin(email, pass);
         };
         document.getElementById('logoutBtn').onclick = async () => {
             await supabase.auth.signOut();
@@ -405,7 +436,7 @@
             };
         });
 
-        // Verificar sessão existente
+        // Verificar sessão ativa
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session && session.user.user_metadata?.role === 'pec_admin') {
                 currentUser = session.user;
@@ -417,6 +448,9 @@
             } else {
                 document.getElementById('loginPanel').style.display = 'block';
             }
+        }).catch(err => {
+            console.error('Erro ao verificar sessão:', err);
+            document.getElementById('loginPanel').style.display = 'block';
         });
     })();
 </script>
