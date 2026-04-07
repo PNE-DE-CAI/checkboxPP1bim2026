@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Checklist Escolas · URE Caieiras</title>
+    <title>Gestão de Checklists · URE Caieiras</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(145deg, #0a2f6c 0%, #041a3a 100%); min-height: 100vh; padding: 20px; color: #212121; }
-        .container { max-width: 1200px; margin: 0 auto; background: #0f1a24; border-radius: 48px; padding: 20px; box-shadow: 0 30px 35px rgba(0,0,0,0.5); border: 1px solid #d32f2f; }
+        .container { max-width: 1400px; margin: 0 auto; background: #0f1a24; border-radius: 48px; padding: 20px; box-shadow: 0 30px 35px rgba(0,0,0,0.5); border: 1px solid #d32f2f; }
         .header { display: flex; justify-content: space-between; align-items: center; background: #0a2f6ccc; backdrop-filter: blur(4px); padding: 12px 24px; border-radius: 60px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         .logo-area { display: flex; align-items: center; gap: 12px; }
         .logo-area img { max-height: 50px; background: white; border-radius: 12px; padding: 4px; }
@@ -19,25 +19,36 @@
         .btn-logout { background: #d32f2f; border: none; padding: 5px 12px; border-radius: 40px; color: white; cursor: pointer; font-weight: 600; }
         .card { background: white; border-radius: 32px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
         .card h2 { color: #0a2f6c; border-left: 4px solid #d32f2f; padding-left: 1rem; margin-bottom: 1.2rem; font-size: 1.5rem; }
-        .btn-primary { background: linear-gradient(135deg, #27ae60, #1e8449); border: none; padding: 12px 24px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem; }
-        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-primary { background: linear-gradient(135deg, #27ae60, #1e8449); border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-secondary { background: #0a2f6c; }
+        .btn-danger { background: #d32f2f; }
         .progress-bar { background: #e0e0e0; border-radius: 30px; height: 8px; overflow: hidden; margin: 5px 0; }
         .progress-fill { background: #d32f2f; width: 0%; height: 100%; }
-        .school-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
+        .school-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem; }
+        .school-card { background: white; border-radius: 24px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #e0e4e9; }
+        .school-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); background: #fefefe; }
+        .school-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #0a2f6c; }
+        .school-progress { margin: 0.5rem 0; }
+        .status-icon { font-size: 1.2rem; text-align: right; }
+        .dashboard-table { width: 100%; border-collapse: collapse; }
+        .dashboard-table th, .dashboard-table td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+        .dashboard-table th { background: #f5f5f5; }
+        .school-row { cursor: pointer; }
         .school-row:hover { background: #f0f0f0; }
-        .school-name { font-weight: 600; width: 30%; }
-        .school-progress { width: 60%; }
-        .status-icon { width: 10%; text-align: center; }
-        .back-btn { background: #6c757d; border: none; padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 8px; }
-        .checklist-item { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; padding: 8px; border-radius: 16px; background: #f8f9fa; }
-        .checklist-item input { margin-top: 3px; width: 20px; height: 20px; accent-color: #0a2f6c; }
-        .readonly-checkbox { opacity: 0.6; pointer-events: none; }
         .week-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .week-btn { background: #e0e4e9; border: none; padding: 8px 16px; border-radius: 40px; font-weight: 600; cursor: pointer; }
         .week-btn.active { background: #d32f2f; color: white; }
+        .checklist-item { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; padding: 8px; border-radius: 16px; background: #f8f9fa; }
+        .checklist-item input { margin-top: 3px; width: 20px; height: 20px; accent-color: #0a2f6c; }
         .date-range { font-size: 0.7rem; color: #666; margin-left: 6px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; border-radius: 32px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 1.5rem; position: relative; }
+        .close-modal { position: absolute; top: 1rem; right: 1.5rem; font-size: 1.8rem; cursor: pointer; color: #666; }
+        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e4e9; }
+        .tab-button { background: none; border: none; padding: 8px 16px; font-weight: 600; cursor: pointer; color: #666; }
+        .tab-button.active { color: #0a2f6c; border-bottom: 2px solid #d32f2f; }
         footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #b4c8e0; font-size: 0.8rem; }
-        @media (max-width: 700px) { .school-row { flex-direction: column; align-items: flex-start; gap: 8px; } .school-name, .school-progress, .status-icon { width: 100%; } }
+        @media (max-width: 700px) { .school-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -55,87 +66,57 @@
 
     <!-- Tela de Login -->
     <div id="loginPanel">
-        <div class="card" style="max-width: 500px; margin: 0 auto;">
-            <h2>🎓 Acesso ao Sistema</h2>
-            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <button id="showSchoolLoginBtn" class="btn-primary" style="background: #0a2f6c; flex:1;">🏫 Escola</button>
-                <button id="showPecLoginBtn" class="btn-primary" style="background: #6c757d; flex:1;">👩‍🏫 PEC Admin</button>
-            </div>
-            <div id="schoolLoginPanel" style="display: block;">
-                <input type="email" id="loginEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                <input type="password" id="loginPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                <button id="doLoginBtn" class="btn-primary" style="width:100%; justify-content: center;">Entrar</button>
-                <hr style="margin: 15px 0;">
-                <p style="text-align:center;"><strong>Não tem cadastro?</strong></p>
-                <select id="cadastroEscola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                    <option value="">Selecione sua escola</option>
-                </select>
-                <input type="email" id="cadastroEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                <input type="password" id="cadastroPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                <button id="doCadastroBtn" class="btn-primary" style="width:100%; justify-content: center; background: #27ae60;">Cadastrar Escola</button>
-            </div>
-            <div id="pecLoginPanel" style="display: none;">
-                <input type="email" id="pecEmail" placeholder="E-mail do PEC Admin" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                <input type="password" id="pecPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                <button id="doPecLoginBtn" class="btn-primary" style="width:100%; justify-content: center;">Entrar como PEC Admin</button>
-            </div>
+        <div class="card" style="max-width: 400px; margin: 0 auto; text-align: center;">
+            <h2>🔐 Acesso Administrativo</h2>
+            <input type="email" id="loginEmail" placeholder="E-mail" value="urecai2026@urecaieiras.com" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+            <input type="password" id="loginPassword" placeholder="Senha" value="2026Ure" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+            <button id="doLoginBtn" class="btn-primary" style="width:100%; justify-content: center;">Entrar</button>
         </div>
     </div>
 
-    <!-- Painel da Escola (checklists editáveis) -->
-    <div id="schoolPanel" style="display: none;">
+    <!-- Painel Principal (após login) -->
+    <div id="mainPanel" style="display: none;">
         <div class="card">
-            <h2 id="schoolNameTitle"></h2>
-            <div class="tab-bar" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <button id="schoolTabProva" class="btn-primary" style="background: #0a2f6c; margin:0;">📝 Prova Paulista</button>
-                <button id="schoolTabTarefa" class="btn-primary" style="background: #6c757d; margin:0;">💻 Tarefa SP</button>
+            <h2><i class="fas fa-chart-line"></i> Dashboard de Progresso</h2>
+            <div style="overflow-x: auto;">
+                <table class="dashboard-table" id="dashboardTable">
+                    <thead>
+                        <tr><th>Escola</th><th>Progresso</th><th>Status</th></tr>
+                    </thead>
+                    <tbody id="dashboardBody"></tbody>
+                </table>
             </div>
-            <div id="schoolProvaPanel">
-                <div class="week-tabs" id="provaWeeks"></div>
-                <div id="provaChecklist"></div>
-                <button id="saveProvaBtn" class="btn-primary"><i class="fas fa-save"></i> Salvar Progresso</button>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-school"></i> Escolas</h2>
+            <div class="school-grid" id="schoolGrid"></div>
+        </div>
+    </div>
+
+    <!-- Modal para editar checklists de uma escola -->
+    <div id="schoolModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modalSchoolName"></h3>
+            <div class="tab-bar">
+                <button class="tab-button active" data-modal-tab="prova">📝 Prova Paulista</button>
+                <button class="tab-button" data-modal-tab="tarefa">💻 Tarefa SP</button>
             </div>
-            <div id="schoolTarefaPanel" style="display: none;">
-                <div class="week-tabs" id="tarefaWeeks"></div>
-                <div id="tarefaChecklist"></div>
-                <button id="saveTarefaBtn" class="btn-primary"><i class="fas fa-save"></i> Salvar Progresso</button>
+            <div id="modalProvaPanel">
+                <div class="week-tabs" id="modalProvaWeeks"></div>
+                <div id="modalProvaChecklist"></div>
+            </div>
+            <div id="modalTarefaPanel" style="display: none;">
+                <div class="week-tabs" id="modalTarefaWeeks"></div>
+                <div id="modalTarefaChecklist"></div>
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button id="saveModalChecklist" class="btn-primary"><i class="fas fa-save"></i> Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- Painel do PEC Admin -->
-    <div id="pecPanel" style="display: none;">
-        <div id="pecMainView">
-            <div class="card" style="text-align: center;">
-                <button id="loadDashboardBtn" class="btn-primary" style="background: #0a2f6c; font-size: 1.2rem;"><i class="fas fa-chart-line"></i> Ver Dashboard das Escolas</button>
-            </div>
-            <div id="dashboardContainer" style="display: none;">
-                <div class="card">
-                    <h2><i class="fas fa-chart-line"></i> Progresso das Escolas</h2>
-                    <div id="pecDashboard"></div>
-                </div>
-            </div>
-        </div>
-        <div id="pecSchoolDetailView" style="display: none;">
-            <button id="backToDashboardBtn" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
-            <div class="card">
-                <h2 id="detailSchoolName"></h2>
-                <div class="tab-bar" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button id="detailTabProva" class="btn-primary" style="background: #0a2f6c; margin:0;">📝 Prova Paulista</button>
-                    <button id="detailTabTarefa" class="btn-primary" style="background: #6c757d; margin:0;">💻 Tarefa SP</button>
-                </div>
-                <div id="detailProvaPanel">
-                    <div class="week-tabs" id="detailProvaWeeks"></div>
-                    <div id="detailProvaChecklist"></div>
-                </div>
-                <div id="detailTarefaPanel" style="display: none;">
-                    <div class="week-tabs" id="detailTarefaWeeks"></div>
-                    <div id="detailTarefaChecklist"></div>
-                </div>
-                <p style="margin-top: 1rem; font-size: 0.8rem; color: #666;"><i class="fas fa-eye"></i> Visualização apenas de leitura</p>
-            </div>
-        </div>
-    </div>
     <footer>Checklist oficial 2026 · URE Caieiras</footer>
 </div>
 
@@ -149,7 +130,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_XR4ym7Nz1sL_7Ap5kpmzgw_7mxWANuI';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ================================================================
-
         const escolasList = [
             "E.E. ADAIL JARBAS DUCLOS", "E.E. AFONSO MORENO", "E.E. ALADINO POLON", "E.E. ALBERTO GRAF – CAPITÃO",
             "E.E. ALBINO FIORE", "E.E. ALFRIED THEODOR WEISZFLOG", "E.E. ANA MARIA GARRIDO ORLANDIN – PROF.ª",
@@ -199,35 +179,145 @@
         };
 
         let currentUser = null;
-        let currentRole = null; // 'school' or 'pec_admin'
-        let currentEscolaNome = null;
-        let savedChecklists = { prova: {}, tarefa: {} };
-        let activeSchoolTab = 'prova';
-        let activeSchoolWeek = 1;
+        let schoolsDataMap = new Map(); // escola_nome -> { checklist_data, user_id (opcional) }
 
-        let selectedSchoolName = null;
-        let selectedSchoolData = null;
-        let detailActiveTab = 'prova';
-        let detailActiveWeek = 1;
+        // Funções de cálculo de progresso
+        function computeProgress(checklistData) {
+            let total = 0, checked = 0;
+            for (let type of ['prova', 'tarefa']) {
+                for (let w = 1; w <= 4; w++) {
+                    const weekKey = `semana${w}`;
+                    const items = checklistsData[type][weekKey] || [];
+                    const saved = checklistData?.[type]?.[weekKey] || {};
+                    total += items.length;
+                    for (let i = 0; i < items.length; i++) {
+                        if (saved[i] === true) checked++;
+                    }
+                }
+            }
+            return total === 0 ? 0 : Math.round((checked / total) * 100);
+        }
 
-        function populateEscolas() {
-            const select = document.getElementById('cadastroEscola');
-            select.innerHTML = '<option value="">Selecione sua escola</option>';
-            escolasList.forEach(e => {
-                let opt = document.createElement('option');
-                opt.value = e;
-                opt.textContent = e;
-                select.appendChild(opt);
+        // Carregar todos os dados das escolas (tabela checklist_escolas)
+        async function loadAllSchoolsData() {
+            const { data, error } = await supabase.from('checklist_escolas').select('*');
+            if (error) {
+                console.error(error);
+                return [];
+            }
+            return data;
+        }
+
+        // Salvar dados de uma escola (upsert)
+        async function saveSchoolData(escolaNome, checklistData) {
+            // Verifica se já existe registro para essa escola
+            const existing = schoolsDataMap.get(escolaNome);
+            if (existing && existing.id) {
+                // Atualiza
+                const { error } = await supabase.from('checklist_escolas')
+                    .update({ checklist_data: checklistData, updated_at: new Date() })
+                    .eq('id', existing.id);
+                if (error) throw error;
+                existing.checklist_data = checklistData;
+            } else {
+                // Insere novo
+                const { data, error } = await supabase.from('checklist_escolas')
+                    .insert([{ escola_nome: escolaNome, checklist_data: checklistData, user_id: currentUser.id }])
+                    .select();
+                if (error) throw error;
+                if (data && data[0]) {
+                    schoolsDataMap.set(escolaNome, { id: data[0].id, checklist_data: checklistData });
+                } else {
+                    // fallback: apenas guarda localmente
+                    schoolsDataMap.set(escolaNome, { checklist_data: checklistData });
+                }
+            }
+        }
+
+        // Renderizar dashboard e cards
+        async function refreshUI() {
+            const allData = await loadAllSchoolsData();
+            schoolsDataMap.clear();
+            allData.forEach(item => {
+                schoolsDataMap.set(item.escola_nome, { id: item.id, checklist_data: item.checklist_data });
+            });
+
+            // Dashboard table
+            const tbody = document.getElementById('dashboardBody');
+            tbody.innerHTML = '';
+            for (const escola of escolasList) {
+                const data = schoolsDataMap.get(escola)?.checklist_data || { prova: {}, tarefa: {} };
+                const percent = computeProgress(data);
+                const hasData = Object.keys(data.prova).length > 0 || Object.keys(data.tarefa).length > 0;
+                const statusIcon = hasData ? (percent === 100 ? '✅ Completo' : '⏳ Em andamento') : '❌ Não iniciado';
+                const row = tbody.insertRow();
+                row.classList.add('school-row');
+                row.onclick = () => openSchoolModal(escola, data);
+                row.insertCell(0).innerText = escola;
+                row.insertCell(1).innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div><small>${percent}%</small>`;
+                row.insertCell(2).innerText = statusIcon;
+            }
+
+            // Cards grid
+            const grid = document.getElementById('schoolGrid');
+            grid.innerHTML = '';
+            for (const escola of escolasList) {
+                const data = schoolsDataMap.get(escola)?.checklist_data || { prova: {}, tarefa: {} };
+                const percent = computeProgress(data);
+                const card = document.createElement('div');
+                card.className = 'school-card';
+                card.onclick = () => openSchoolModal(escola, data);
+                card.innerHTML = `
+                    <h3>${escola}</h3>
+                    <div class="school-progress"><div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div></div>
+                    <div class="status-icon">${percent}%</div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        // Modal: abrir para editar checklists de uma escola
+        let currentModalSchool = null;
+        let currentModalData = null;
+        let modalActiveTab = 'prova';
+        let modalActiveWeek = 1;
+
+        function openSchoolModal(escolaNome, checklistData) {
+            currentModalSchool = escolaNome;
+            currentModalData = JSON.parse(JSON.stringify(checklistData)); // cópia
+            document.getElementById('modalSchoolName').innerText = escolaNome;
+            document.getElementById('schoolModal').style.display = 'flex';
+            modalActiveTab = 'prova';
+            modalActiveWeek = 1;
+            renderModalWeeks();
+            renderModalChecklist();
+        }
+
+        function renderModalWeeks() {
+            const weeks = [1,2,3,4];
+            const provaContainer = document.getElementById('modalProvaWeeks');
+            const tarefaContainer = document.getElementById('modalTarefaWeeks');
+            provaContainer.innerHTML = '';
+            tarefaContainer.innerHTML = '';
+            weeks.forEach(w => {
+                const btn1 = document.createElement('button');
+                btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
+                btn1.className = `week-btn ${modalActiveTab === 'prova' && modalActiveWeek === w ? 'active' : ''}`;
+                btn1.onclick = () => { modalActiveWeek = w; renderModalWeeks(); renderModalChecklist(); };
+                provaContainer.appendChild(btn1);
+                const btn2 = document.createElement('button');
+                btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
+                btn2.className = `week-btn ${modalActiveTab === 'tarefa' && modalActiveWeek === w ? 'active' : ''}`;
+                btn2.onclick = () => { modalActiveWeek = w; renderModalWeeks(); renderModalChecklist(); };
+                tarefaContainer.appendChild(btn2);
             });
         }
 
-        // ==================== FUNÇÕES DA ESCOLA ====================
-        function renderSchoolChecklists() {
-            const type = activeSchoolTab;
-            const weekKey = `semana${activeSchoolWeek}`;
-            const items = checklistsData[type][weekKey] || [];
-            const saved = savedChecklists[type]?.[weekKey] || {};
-            const container = document.getElementById(`${type}Checklist`);
+        function renderModalChecklist() {
+            const weekKey = `semana${modalActiveWeek}`;
+            const items = checklistsData[modalActiveTab][weekKey] || [];
+            const saved = currentModalData?.[modalActiveTab]?.[weekKey] || {};
+            const container = document.getElementById(`modal${modalActiveTab === 'prova' ? 'ProvaChecklist' : 'TarefaChecklist'}`);
             if (!container) return;
             container.innerHTML = '';
             items.forEach((item, idx) => {
@@ -240,365 +330,90 @@
                 `;
                 container.appendChild(div);
             });
-            document.querySelectorAll(`#${type}Checklist input[type="checkbox"]`).forEach(cb => {
-                cb.addEventListener('change', () => {
+            // Adicionar event listeners
+            container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', (e) => {
                     const week = cb.dataset.week;
-                    const idx = cb.dataset.idx;
-                    if (!savedChecklists[type][week]) savedChecklists[type][week] = {};
-                    savedChecklists[type][week][idx] = cb.checked;
+                    const idx = parseInt(cb.dataset.idx);
+                    if (!currentModalData[modalActiveTab]) currentModalData[modalActiveTab] = {};
+                    if (!currentModalData[modalActiveTab][week]) currentModalData[modalActiveTab][week] = {};
+                    currentModalData[modalActiveTab][week][idx] = cb.checked;
                 });
             });
         }
 
-        function renderSchoolWeeks() {
-            const weeks = [1,2,3,4];
-            const provaContainer = document.getElementById('provaWeeks');
-            const tarefaContainer = document.getElementById('tarefaWeeks');
-            if (!provaContainer || !tarefaContainer) return;
-            provaContainer.innerHTML = '';
-            tarefaContainer.innerHTML = '';
-            weeks.forEach(w => {
-                const btn1 = document.createElement('button');
-                btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
-                btn1.className = `week-btn ${activeSchoolTab === 'prova' && activeSchoolWeek === w ? 'active' : ''}`;
-                btn1.onclick = () => { activeSchoolWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
-                provaContainer.appendChild(btn1);
-                const btn2 = document.createElement('button');
-                btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
-                btn2.className = `week-btn ${activeSchoolTab === 'tarefa' && activeSchoolWeek === w ? 'active' : ''}`;
-                btn2.onclick = () => { activeSchoolWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
-                tarefaContainer.appendChild(btn2);
-            });
+        async function saveModalData() {
+            if (!currentModalSchool) return;
+            await saveSchoolData(currentModalSchool, currentModalData);
+            await refreshUI();
+            alert(`Checklists de ${currentModalSchool} salvos com sucesso!`);
+            closeModal();
         }
 
-        async function loadSchoolData() {
-            if (!currentUser) return;
-            const { data, error } = await supabase
-                .from('checklist_escolas')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .single();
-            if (error && error.code !== 'PGRST116') {
-                console.error(error);
-                return;
-            }
-            if (data) {
-                savedChecklists = data.checklist_data || { prova: {}, tarefa: {} };
-                currentEscolaNome = data.escola_nome;
-            } else {
-                // Tenta pegar dos metadados
-                currentEscolaNome = currentUser.user_metadata?.escola_nome || "Escola não definida";
-                savedChecklists = { prova: {}, tarefa: {} };
-                await supabase.from('checklist_escolas').insert([{
-                    user_id: currentUser.id,
-                    escola_nome: currentEscolaNome,
-                    checklist_data: savedChecklists
-                }]);
-            }
-            // Atualiza exibição do nome da escola no cabeçalho e no título
-            document.getElementById('userNameDisplay').innerHTML = `📌 ${currentEscolaNome}`;
-            document.getElementById('schoolNameTitle').innerHTML = `📋 Checklist - ${currentEscolaNome}`;
-            renderSchoolWeeks();
-            renderSchoolChecklists();
+        function closeModal() {
+            document.getElementById('schoolModal').style.display = 'none';
+            currentModalSchool = null;
         }
 
-        async function saveSchoolChecklists() {
-            if (!currentUser) return;
-            const { error } = await supabase
-                .from('checklist_escolas')
-                .update({ checklist_data: savedChecklists, updated_at: new Date() })
-                .eq('user_id', currentUser.id);
-            if (error) alert('Erro ao salvar: ' + error.message);
-            else alert('Progresso salvo com sucesso!');
-        }
-
-        // ==================== FUNÇÕES DO PEC ADMIN ====================
-        async function fetchAllSchoolsData() {
-            const { data, error } = await supabase.from('checklist_escolas').select('*');
-            if (error) {
-                console.error(error);
-                return [];
-            }
-            return data;
-        }
-
-        function computeProgressForSchool(checklistData) {
-            let totalItems = 0, totalChecked = 0;
-            for (let type of ['prova', 'tarefa']) {
-                for (let w = 1; w <= 4; w++) {
-                    const weekKey = `semana${w}`;
-                    const items = checklistsData[type][weekKey] || [];
-                    const saved = checklistData?.[type]?.[weekKey] || {};
-                    totalItems += items.length;
-                    for (let i = 0; i < items.length; i++) {
-                        if (saved[i] === true) totalChecked++;
-                    }
-                }
-            }
-            const percent = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
-            return { percent, totalItems, totalChecked };
-        }
-
-        async function renderPecDashboard() {
-            const schoolsData = await fetchAllSchoolsData();
-            const map = new Map();
-            schoolsData.forEach(s => map.set(s.escola_nome, s.checklist_data));
-
-            const dashboardDiv = document.getElementById('pecDashboard');
-            if (!dashboardDiv) return;
-            dashboardDiv.innerHTML = '';
-            for (const escola of escolasList) {
-                const data = map.get(escola) || { prova: {}, tarefa: {} };
-                const { percent } = computeProgressForSchool(data);
-                const hasData = Object.keys(data.prova).length > 0 || Object.keys(data.tarefa).length > 0;
-                const statusIcon = hasData ? (percent === 100 ? '✅' : '⏳') : '❌';
-                const statusText = hasData ? (percent === 100 ? 'Completo' : `${percent}% concluído`) : 'Não iniciado';
-                const row = document.createElement('div');
-                row.className = 'school-row';
-                row.onclick = () => showSchoolDetail(escola, data);
-                row.innerHTML = `
-                    <div class="school-name">${escola}</div>
-                    <div class="school-progress">
-                        <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div>
-                        <small>${statusText}</small>
-                    </div>
-                    <div class="status-icon">${statusIcon}</div>
-                `;
-                dashboardDiv.appendChild(row);
-            }
-        }
-
-        function showSchoolDetail(escolaNome, checklistData) {
-            selectedSchoolName = escolaNome;
-            selectedSchoolData = checklistData || { prova: {}, tarefa: {} };
-            document.getElementById('detailSchoolName').innerHTML = `<i class="fas fa-school"></i> ${escolaNome} - Checklist (somente leitura)`;
-            document.getElementById('pecMainView').style.display = 'none';
-            document.getElementById('pecSchoolDetailView').style.display = 'block';
-            renderSchoolDetailChecklists();
-        }
-
-        function renderSchoolDetailChecklists() {
-            const weekKey = `semana${detailActiveWeek}`;
-            const items = checklistsData[detailActiveTab][weekKey] || [];
-            const saved = selectedSchoolData?.[detailActiveTab]?.[weekKey] || {};
-            const provaContainer = document.getElementById('detailProvaChecklist');
-            const tarefaContainer = document.getElementById('detailTarefaChecklist');
-            if (!provaContainer || !tarefaContainer) return;
-            if (detailActiveTab === 'prova') {
-                provaContainer.innerHTML = '';
-                items.forEach((item, idx) => {
-                    const isChecked = saved[idx] === true;
-                    const div = document.createElement('div');
-                    div.className = 'checklist-item';
-                    div.innerHTML = `<input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
-                    provaContainer.appendChild(div);
-                });
-            } else {
-                tarefaContainer.innerHTML = '';
-                items.forEach((item, idx) => {
-                    const isChecked = saved[idx] === true;
-                    const div = document.createElement('div');
-                    div.className = 'checklist-item';
-                    div.innerHTML = `<input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
-                    tarefaContainer.appendChild(div);
-                });
-            }
-        }
-
-        function renderDetailWeeks() {
-            const weeks = [1,2,3,4];
-            const provaContainer = document.getElementById('detailProvaWeeks');
-            const tarefaContainer = document.getElementById('detailTarefaWeeks');
-            if (!provaContainer || !tarefaContainer) return;
-            provaContainer.innerHTML = '';
-            tarefaContainer.innerHTML = '';
-            weeks.forEach(w => {
-                const btn1 = document.createElement('button');
-                btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
-                btn1.className = `week-btn ${detailActiveTab === 'prova' && detailActiveWeek === w ? 'active' : ''}`;
-                btn1.onclick = () => { detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
-                provaContainer.appendChild(btn1);
-                const btn2 = document.createElement('button');
-                btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
-                btn2.className = `week-btn ${detailActiveTab === 'tarefa' && detailActiveWeek === w ? 'active' : ''}`;
-                btn2.onclick = () => { detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
-                tarefaContainer.appendChild(btn2);
-            });
-        }
-
-        // ==================== AUTENTICAÇÃO ====================
-        async function schoolLogin(email, password) {
+        // Autenticação
+        async function doLogin(email, password) {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) { alert('Erro: ' + error.message); return false; }
             currentUser = data.user;
-            currentRole = 'school';
-            await loadSchoolData();
-            return true;
-        }
-
-        async function schoolSignup(escola, email, password) {
-            const { data, error } = await supabase.auth.signUp({
-                email, password,
-                options: { data: { escola_nome: escola, role: 'school' } }
-            });
-            if (error) { alert('Erro: ' + error.message); return false; }
-            // Aguarda a confirmação do e-mail? Para testes, podemos criar direto.
-            // Mas como o e-mail precisa ser confirmado, talvez seja melhor criar sem confirmação.
-            // Para simplificar, vamos inserir na tabela checklist_escolas após confirmação.
-            // Como o signUp pode não criar o usuário imediatamente (depende de confirmação), 
-            // faremos o insert depois que o usuário fizer login.
-            alert('Cadastro realizado! Verifique seu e-mail e faça login.');
-            return true;
-        }
-
-        async function pecAdminLogin(email, password) {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) { alert('Erro: ' + error.message); return false; }
             const role = data.user.user_metadata?.role;
             if (role !== 'pec_admin') {
-                alert('Acesso negado. Você não tem permissão de PEC Admin.');
+                alert('Acesso negado. Você não tem permissão de administrador.');
                 await supabase.auth.signOut();
                 return false;
             }
-            currentUser = data.user;
-            currentRole = 'pec_admin';
-            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${data.user.email}`;
+            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 Admin: ${email}`;
+            document.getElementById('loginPanel').style.display = 'none';
+            document.getElementById('mainPanel').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'flex';
+            await refreshUI();
             return true;
         }
 
-        // ==================== EVENTOS ====================
-        document.getElementById('showSchoolLoginBtn').onclick = () => {
-            document.getElementById('schoolLoginPanel').style.display = 'block';
-            document.getElementById('pecLoginPanel').style.display = 'none';
-        };
-        document.getElementById('showPecLoginBtn').onclick = () => {
-            document.getElementById('schoolLoginPanel').style.display = 'none';
-            document.getElementById('pecLoginPanel').style.display = 'block';
-        };
+        // Eventos
         document.getElementById('doLoginBtn').onclick = async () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPassword').value;
-            if (await schoolLogin(email, pass)) {
-                document.getElementById('loginPanel').style.display = 'none';
-                document.getElementById('schoolPanel').style.display = 'block';
-                document.getElementById('userInfo').style.display = 'flex';
-            }
-        };
-        document.getElementById('doCadastroBtn').onclick = async () => {
-            const escola = document.getElementById('cadastroEscola').value;
-            const email = document.getElementById('cadastroEmail').value;
-            const pass = document.getElementById('cadastroPassword').value;
-            if (!escola || !email || !pass) { alert('Preencha todos os campos'); return; }
-            await schoolSignup(escola, email, pass);
-        };
-        document.getElementById('doPecLoginBtn').onclick = async () => {
-            const email = document.getElementById('pecEmail').value;
-            const pass = document.getElementById('pecPassword').value;
-            if (await pecAdminLogin(email, pass)) {
-                document.getElementById('loginPanel').style.display = 'none';
-                document.getElementById('pecPanel').style.display = 'block';
-                document.getElementById('userInfo').style.display = 'flex';
-                // Reset views
-                document.getElementById('pecMainView').style.display = 'block';
-                document.getElementById('pecSchoolDetailView').style.display = 'none';
-                document.getElementById('dashboardContainer').style.display = 'none';
-            }
+            await doLogin(email, pass);
         };
         document.getElementById('logoutBtn').onclick = async () => {
             await supabase.auth.signOut();
             currentUser = null;
             document.getElementById('loginPanel').style.display = 'block';
-            document.getElementById('schoolPanel').style.display = 'none';
-            document.getElementById('pecPanel').style.display = 'none';
+            document.getElementById('mainPanel').style.display = 'none';
             document.getElementById('userInfo').style.display = 'none';
-            document.getElementById('schoolLoginPanel').style.display = 'block';
-            document.getElementById('pecLoginPanel').style.display = 'none';
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('pecEmail').value = '';
-            document.getElementById('pecPassword').value = '';
         };
-        document.getElementById('saveProvaBtn').onclick = saveSchoolChecklists;
-        document.getElementById('saveTarefaBtn').onclick = saveSchoolChecklists;
+        document.querySelector('.close-modal').onclick = closeModal;
+        window.onclick = (e) => { if (e.target === document.getElementById('schoolModal')) closeModal(); };
+        document.getElementById('saveModalChecklist').onclick = saveModalData;
 
-        document.getElementById('loadDashboardBtn').onclick = async () => {
-            const container = document.getElementById('dashboardContainer');
-            if (container.style.display === 'none') {
-                await renderPecDashboard();
-                container.style.display = 'block';
-            } else {
-                await renderPecDashboard();
-            }
-        };
-        document.getElementById('backToDashboardBtn').onclick = () => {
-            document.getElementById('pecMainView').style.display = 'block';
-            document.getElementById('pecSchoolDetailView').style.display = 'none';
-        };
+        // Abas no modal
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                modalActiveTab = btn.dataset.modalTab;
+                document.getElementById('modalProvaPanel').style.display = modalActiveTab === 'prova' ? 'block' : 'none';
+                document.getElementById('modalTarefaPanel').style.display = modalActiveTab === 'tarefa' ? 'block' : 'none';
+                modalActiveWeek = 1;
+                renderModalWeeks();
+                renderModalChecklist();
+            };
+        });
 
-        // Abas da escola
-        document.getElementById('schoolTabProva').onclick = () => {
-            activeSchoolTab = 'prova';
-            document.getElementById('schoolProvaPanel').style.display = 'block';
-            document.getElementById('schoolTarefaPanel').style.display = 'none';
-            document.getElementById('schoolTabProva').style.background = '#0a2f6c';
-            document.getElementById('schoolTabTarefa').style.background = '#6c757d';
-            activeSchoolWeek = 1;
-            renderSchoolWeeks();
-            renderSchoolChecklists();
-        };
-        document.getElementById('schoolTabTarefa').onclick = () => {
-            activeSchoolTab = 'tarefa';
-            document.getElementById('schoolProvaPanel').style.display = 'none';
-            document.getElementById('schoolTarefaPanel').style.display = 'block';
-            document.getElementById('schoolTabTarefa').style.background = '#0a2f6c';
-            document.getElementById('schoolTabProva').style.background = '#6c757d';
-            activeSchoolWeek = 1;
-            renderSchoolWeeks();
-            renderSchoolChecklists();
-        };
-
-        // Abas do detalhe (admin)
-        document.getElementById('detailTabProva').onclick = () => {
-            detailActiveTab = 'prova';
-            document.getElementById('detailProvaPanel').style.display = 'block';
-            document.getElementById('detailTarefaPanel').style.display = 'none';
-            document.getElementById('detailTabProva').style.background = '#0a2f6c';
-            document.getElementById('detailTabTarefa').style.background = '#6c757d';
-            detailActiveWeek = 1;
-            renderDetailWeeks();
-            renderSchoolDetailChecklists();
-        };
-        document.getElementById('detailTabTarefa').onclick = () => {
-            detailActiveTab = 'tarefa';
-            document.getElementById('detailProvaPanel').style.display = 'none';
-            document.getElementById('detailTarefaPanel').style.display = 'block';
-            document.getElementById('detailTabTarefa').style.background = '#0a2f6c';
-            document.getElementById('detailTabProva').style.background = '#6c757d';
-            detailActiveWeek = 1;
-            renderDetailWeeks();
-            renderSchoolDetailChecklists();
-        };
-
-        // Inicialização
-        populateEscolas();
+        // Verificar sessão existente
         supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
+            if (session && session.user.user_metadata?.role === 'pec_admin') {
                 currentUser = session.user;
-                const role = session.user.user_metadata?.role;
-                if (role === 'pec_admin') {
-                    currentRole = 'pec_admin';
-                    document.getElementById('loginPanel').style.display = 'none';
-                    document.getElementById('pecPanel').style.display = 'block';
-                    document.getElementById('userInfo').style.display = 'flex';
-                    document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${session.user.email}`;
-                } else {
-                    currentRole = 'school';
-                    loadSchoolData().then(() => {
-                        document.getElementById('loginPanel').style.display = 'none';
-                        document.getElementById('schoolPanel').style.display = 'block';
-                        document.getElementById('userInfo').style.display = 'flex';
-                    });
-                }
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 Admin: ${session.user.email}`;
+                refreshUI();
             } else {
                 document.getElementById('loginPanel').style.display = 'block';
             }
