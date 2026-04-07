@@ -30,7 +30,8 @@
         .status-icon { width: 10%; text-align: center; }
         .back-btn { background: #6c757d; border: none; padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 8px; }
         .checklist-item { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; padding: 8px; border-radius: 16px; background: #f8f9fa; }
-        .checklist-item input { margin-top: 3px; width: 20px; height: 20px; accent-color: #0a2f6c; pointer-events: none; opacity: 0.6; }
+        .checklist-item input { margin-top: 3px; width: 20px; height: 20px; accent-color: #0a2f6c; }
+        .readonly-checkbox { opacity: 0.6; pointer-events: none; }
         .week-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .week-btn { background: #e0e4e9; border: none; padding: 8px 16px; border-radius: 40px; font-weight: 600; cursor: pointer; }
         .week-btn.active { background: #d32f2f; color: white; }
@@ -102,7 +103,7 @@
         </div>
     </div>
 
-    <!-- Painel do PEC Admin (simples: botão para mostrar dashboard) -->
+    <!-- Painel do PEC Admin -->
     <div id="pecPanel" style="display: none;">
         <div id="pecMainView">
             <div class="card" style="text-align: center;">
@@ -285,6 +286,7 @@
                 savedChecklists = data.checklist_data || { prova: {}, tarefa: {} };
                 currentEscolaNome = data.escola_nome;
             } else {
+                // Tenta pegar dos metadados
                 currentEscolaNome = currentUser.user_metadata?.escola_nome || "Escola não definida";
                 savedChecklists = { prova: {}, tarefa: {} };
                 await supabase.from('checklist_escolas').insert([{
@@ -293,6 +295,7 @@
                     checklist_data: savedChecklists
                 }]);
             }
+            // Atualiza exibição do nome da escola no cabeçalho e no título
             document.getElementById('userNameDisplay').innerHTML = `📌 ${currentEscolaNome}`;
             document.getElementById('schoolNameTitle').innerHTML = `📋 Checklist - ${currentEscolaNome}`;
             renderSchoolWeeks();
@@ -387,7 +390,7 @@
                     const isChecked = saved[idx] === true;
                     const div = document.createElement('div');
                     div.className = 'checklist-item';
-                    div.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
+                    div.innerHTML = `<input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
                     provaContainer.appendChild(div);
                 });
             } else {
@@ -396,7 +399,7 @@
                     const isChecked = saved[idx] === true;
                     const div = document.createElement('div');
                     div.className = 'checklist-item';
-                    div.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
+                    div.innerHTML = `<input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
                     tarefaContainer.appendChild(div);
                 });
             }
@@ -439,12 +442,12 @@
                 options: { data: { escola_nome: escola, role: 'school' } }
             });
             if (error) { alert('Erro: ' + error.message); return false; }
-            await supabase.from('checklist_escolas').insert([{
-                user_id: data.user.id,
-                escola_nome: escola,
-                checklist_data: { prova: {}, tarefa: {} }
-            }]);
-            alert('Cadastro realizado! Faça login.');
+            // Aguarda a confirmação do e-mail? Para testes, podemos criar direto.
+            // Mas como o e-mail precisa ser confirmado, talvez seja melhor criar sem confirmação.
+            // Para simplificar, vamos inserir na tabela checklist_escolas após confirmação.
+            // Como o signUp pode não criar o usuário imediatamente (depende de confirmação), 
+            // faremos o insert depois que o usuário fizer login.
+            alert('Cadastro realizado! Verifique seu e-mail e faça login.');
             return true;
         }
 
@@ -459,7 +462,7 @@
             }
             currentUser = data.user;
             currentRole = 'pec_admin';
-            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${email}`;
+            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${data.user.email}`;
             return true;
         }
 
@@ -518,21 +521,18 @@
         document.getElementById('saveProvaBtn').onclick = saveSchoolChecklists;
         document.getElementById('saveTarefaBtn').onclick = saveSchoolChecklists;
 
-        // Botão para carregar o dashboard (simples)
         document.getElementById('loadDashboardBtn').onclick = async () => {
             const container = document.getElementById('dashboardContainer');
             if (container.style.display === 'none') {
                 await renderPecDashboard();
                 container.style.display = 'block';
             } else {
-                // Se já estiver visível, recarrega os dados
                 await renderPecDashboard();
             }
         };
         document.getElementById('backToDashboardBtn').onclick = () => {
             document.getElementById('pecMainView').style.display = 'block';
             document.getElementById('pecSchoolDetailView').style.display = 'none';
-            // Não esconde o dashboardContainer, apenas volta
         };
 
         // Abas da escola
