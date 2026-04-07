@@ -4,135 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Checklist Escolas · URE Caieiras</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.4.0/css/all.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(145deg, #0a2f6c 0%, #041a3a 100%); min-height: 100vh; padding: 20px; color: #212121; }
-        :root { --azul-escuro: #0a2f6c; --azul-claro: #eef3fb; --vermelho: #d32f2f; --branco: #ffffff; --preto: #212121; --cinza-borda: #e0e4e9; }
-        .container { max-width: 1280px; margin: 0 auto; background: #0f1a24; border-radius: 48px; padding: 20px; box-shadow: 0 30px 35px rgba(0,0,0,0.5), inset 0 1px 4px rgba(255,255,200,0.1); border: 1px solid var(--vermelho); }
+        .container { max-width: 1200px; margin: 0 auto; background: #0f1a24; border-radius: 48px; padding: 20px; box-shadow: 0 30px 35px rgba(0,0,0,0.5); border: 1px solid #d32f2f; }
         .header { display: flex; justify-content: space-between; align-items: center; background: #0a2f6ccc; backdrop-filter: blur(4px); padding: 12px 24px; border-radius: 60px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
         .logo-area { display: flex; align-items: center; gap: 12px; }
-        .logo-area img { max-height: 50px; width: auto; background: white; border-radius: 12px; padding: 4px; }
+        .logo-area img { max-height: 50px; background: white; border-radius: 12px; padding: 4px; }
         .logo-area span { font-size: 1.2rem; font-weight: 600; color: #ffec9e; }
-        .countdown { background: #1e4663; padding: 8px 20px; border-radius: 40px; font-weight: bold; color: white; }
-        .countdown span { color: var(--vermelho); font-size: 1.4rem; margin: 0 2px; }
         .user-info { background: #0a2f6c99; padding: 6px 18px; border-radius: 40px; color: white; display: flex; align-items: center; gap: 12px; }
-        .btn-logout { background: var(--vermelho); border: none; padding: 5px 12px; border-radius: 40px; color: white; cursor: pointer; font-weight: 600; }
-        .card { background: var(--branco); border-radius: 32px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); border: 1px solid var(--cinza-borda); }
-        .card h2 { color: var(--azul-escuro); border-left: 4px solid var(--vermelho); padding-left: 1rem; margin-bottom: 1.2rem; font-size: 1.5rem; }
-        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; border-bottom: 2px solid var(--cinza-borda); }
-        .tab-button { background: none; border: none; padding: 10px 20px; font-size: 1rem; font-weight: 600; color: #666; cursor: pointer; border-radius: 40px 40px 0 0; transition: 0.2s; }
-        .tab-button.active { background: var(--azul-escuro); color: white; }
-        .week-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .week-btn { background: #e0e4e9; border: none; padding: 8px 16px; border-radius: 40px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .week-btn.active { background: var(--vermelho); color: white; }
-        .checklist-item { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; padding: 8px; border-radius: 16px; background: #f8f9fa; }
-        .checklist-item input { margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: var(--azul-escuro); }
-        .checklist-item label { flex: 1; font-size: 0.95rem; color: var(--preto); cursor: pointer; }
-        .save-btn { background: linear-gradient(135deg, #27ae60, #1e8449); border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; margin-top: 1rem; display: inline-flex; align-items: center; gap: 8px; }
-        .save-btn:hover { transform: translateY(-2px); }
-        .date-range { font-size: 0.7rem; color: #666; margin-left: 6px; font-weight: normal; }
+        .btn-logout { background: #d32f2f; border: none; padding: 5px 12px; border-radius: 40px; color: white; cursor: pointer; font-weight: 600; }
+        .card { background: white; border-radius: 32px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .card h2 { color: #0a2f6c; border-left: 4px solid #d32f2f; padding-left: 1rem; margin-bottom: 1.2rem; font-size: 1.5rem; }
+        .btn-primary { background: linear-gradient(135deg, #27ae60, #1e8449); border: none; padding: 12px 24px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem; }
+        .btn-primary:hover { transform: translateY(-2px); }
         .progress-bar { background: #e0e0e0; border-radius: 30px; height: 8px; overflow: hidden; margin: 5px 0; }
-        .progress-fill { background: var(--vermelho); width: 0%; height: 100%; border-radius: 30px; }
+        .progress-fill { background: #d32f2f; width: 0%; height: 100%; }
         .school-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
         .school-row:hover { background: #f0f0f0; }
         .school-name { font-weight: 600; width: 30%; }
         .school-progress { width: 60%; }
         .status-icon { width: 10%; text-align: center; }
         .back-btn { background: #6c757d; border: none; padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 8px; }
-        .readonly-checkbox { opacity: 0.6; pointer-events: none; }
-        .refresh-btn { background: #0a2f6c; border: none; padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; margin-left: 10px; display: inline-flex; align-items: center; gap: 8px; }
-        footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #b4c8e0; font-size: 0.8rem; border-top: 1px solid #2c4c6e; }
-        @media (max-width: 700px) { .container { padding: 12px; } .school-row { flex-direction: column; align-items: flex-start; gap: 8px; } .school-name, .school-progress, .status-icon { width: 100%; } }
+        .checklist-item { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; padding: 8px; border-radius: 16px; background: #f8f9fa; }
+        .checklist-item input { margin-top: 3px; width: 20px; height: 20px; accent-color: #0a2f6c; pointer-events: none; opacity: 0.6; }
+        .week-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .week-btn { background: #e0e4e9; border: none; padding: 8px 16px; border-radius: 40px; font-weight: 600; cursor: pointer; }
+        .week-btn.active { background: #d32f2f; color: white; }
+        .date-range { font-size: 0.7rem; color: #666; margin-left: 6px; }
+        footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #b4c8e0; font-size: 0.8rem; }
+        @media (max-width: 700px) { .school-row { flex-direction: column; align-items: flex-start; gap: 8px; } .school-name, .school-progress, .status-icon { width: 100%; } }
     </style>
 </head>
 <body>
-<div class="container" id="app">
+<div class="container">
     <div class="header">
         <div class="logo-area">
             <img src="https://i.ibb.co/0p01LzxB/logo3de.jpg" alt="Logo SEDUC">
             <span>URE Caieiras · Checklists 2026</span>
         </div>
-        <div class="countdown" id="countdownTimer">📅 <span id="dias">0</span> dias para a Prova Paulista</div>
         <div class="user-info" id="userInfo" style="display: none;">
             <span id="userNameDisplay"></span>
             <button id="logoutBtn" class="btn-logout">Sair</button>
         </div>
     </div>
 
-    <!-- Tela de Login / Cadastro -->
+    <!-- Tela de Login -->
     <div id="loginPanel">
         <div class="card" style="max-width: 500px; margin: 0 auto;">
             <h2>🎓 Acesso ao Sistema</h2>
             <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <button id="showSchoolLoginBtn" class="save-btn" style="background: var(--azul-escuro); flex:1;">🏫 Escola</button>
-                <button id="showPecLoginBtn" class="save-btn" style="background: #6c757d; flex:1;">👩‍🏫 PEC Admin</button>
+                <button id="showSchoolLoginBtn" class="btn-primary" style="background: #0a2f6c; flex:1;">🏫 Escola</button>
+                <button id="showPecLoginBtn" class="btn-primary" style="background: #6c757d; flex:1;">👩‍🏫 PEC Admin</button>
             </div>
             <div id="schoolLoginPanel" style="display: block;">
-                <div style="margin-bottom: 15px;">
-                    <button id="showSchoolLoginFormBtn" class="btn-link" style="background: #6c757d; padding:5px 10px; border-radius:40px;">Entrar</button>
-                    <button id="showSchoolCadastroFormBtn" class="btn-link" style="background: #27ae60; padding:5px 10px; border-radius:40px;">Cadastrar Escola</button>
-                </div>
-                <div id="schoolLoginForm" style="display: block;">
-                    <input type="email" id="loginEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                    <input type="password" id="loginPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                    <button id="doLoginBtn" class="save-btn" style="width:100%; justify-content: center;">Entrar</button>
-                </div>
-                <div id="schoolCadastroForm" style="display: none;">
-                    <select id="cadastroEscola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                        <option value="">Selecione sua escola</option>
-                    </select>
-                    <input type="email" id="cadastroEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                    <input type="password" id="cadastroPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                    <button id="doCadastroBtn" class="save-btn" style="width:100%; justify-content: center;">Cadastrar</button>
-                </div>
+                <input type="email" id="loginEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+                <input type="password" id="loginPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+                <button id="doLoginBtn" class="btn-primary" style="width:100%; justify-content: center;">Entrar</button>
+                <hr style="margin: 15px 0;">
+                <p style="text-align:center;"><strong>Não tem cadastro?</strong></p>
+                <select id="cadastroEscola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                    <option value="">Selecione sua escola</option>
+                </select>
+                <input type="email" id="cadastroEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                <input type="password" id="cadastroPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                <button id="doCadastroBtn" class="btn-primary" style="width:100%; justify-content: center; background: #27ae60;">Cadastrar Escola</button>
             </div>
             <div id="pecLoginPanel" style="display: none;">
-                <input type="email" id="pecEmail" placeholder="E-mail do PEC Admin" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                <input type="password" id="pecPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                <button id="doPecLoginBtn" class="save-btn" style="width:100%; justify-content: center;">Entrar como PEC Admin</button>
-                <p style="margin-top:8px; font-size:0.8rem;">⚠️ PEC Admin: visualiza todas as escolas e o progresso individual.</p>
+                <input type="email" id="pecEmail" placeholder="E-mail do PEC Admin" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                <input type="password" id="pecPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                <button id="doPecLoginBtn" class="btn-primary" style="width:100%; justify-content: center;">Entrar como PEC Admin</button>
             </div>
         </div>
     </div>
 
-    <!-- Painel da Escola -->
+    <!-- Painel da Escola (checklists editáveis) -->
     <div id="schoolPanel" style="display: none;">
-        <div class="tab-bar">
-            <button class="tab-button active" data-tab="prova">📝 Prova Paulista</button>
-            <button class="tab-button" data-tab="tarefa">💻 Tarefa SP</button>
-        </div>
-        <div id="provaPanel" class="tab-content">
-            <div class="week-tabs" id="provaWeeks"></div>
-            <div id="provaChecklist"></div>
-            <button id="saveProvaBtn" class="save-btn"><i class="fas fa-save"></i> Salvar Progresso</button>
-        </div>
-        <div id="tarefaPanel" class="tab-content" style="display: none;">
-            <div class="week-tabs" id="tarefaWeeks"></div>
-            <div id="tarefaChecklist"></div>
-            <button id="saveTarefaBtn" class="save-btn"><i class="fas fa-save"></i> Salvar Progresso</button>
+        <div class="card">
+            <h2 id="schoolNameTitle"></h2>
+            <div class="tab-bar" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="schoolTabProva" class="btn-primary" style="background: #0a2f6c; margin:0;">📝 Prova Paulista</button>
+                <button id="schoolTabTarefa" class="btn-primary" style="background: #6c757d; margin:0;">💻 Tarefa SP</button>
+            </div>
+            <div id="schoolProvaPanel">
+                <div class="week-tabs" id="provaWeeks"></div>
+                <div id="provaChecklist"></div>
+                <button id="saveProvaBtn" class="btn-primary"><i class="fas fa-save"></i> Salvar Progresso</button>
+            </div>
+            <div id="schoolTarefaPanel" style="display: none;">
+                <div class="week-tabs" id="tarefaWeeks"></div>
+                <div id="tarefaChecklist"></div>
+                <button id="saveTarefaBtn" class="btn-primary"><i class="fas fa-save"></i> Salvar Progresso</button>
+            </div>
         </div>
     </div>
 
-    <!-- Painel do PEC Admin (Dashboard geral) -->
+    <!-- Painel do PEC Admin (simples: botão para mostrar dashboard) -->
     <div id="pecPanel" style="display: none;">
         <div id="pecMainView">
-            <div class="card">
-                <h2><i class="fas fa-chart-line"></i> Dashboard de Progresso das Escolas 
-                    <button id="refreshDashboardBtn" class="refresh-btn"><i class="fas fa-sync-alt"></i> Recarregar</button>
-                </h2>
-                <div id="pecDashboard"></div>
+            <div class="card" style="text-align: center;">
+                <button id="loadDashboardBtn" class="btn-primary" style="background: #0a2f6c; font-size: 1.2rem;"><i class="fas fa-chart-line"></i> Ver Dashboard das Escolas</button>
+            </div>
+            <div id="dashboardContainer" style="display: none;">
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> Progresso das Escolas</h2>
+                    <div id="pecDashboard"></div>
+                </div>
             </div>
         </div>
         <div id="pecSchoolDetailView" style="display: none;">
             <button id="backToDashboardBtn" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
             <div class="card">
                 <h2 id="detailSchoolName"></h2>
-                <div class="tab-bar">
-                    <button class="tab-button detail-tab active" data-detail-tab="prova">📝 Prova Paulista</button>
-                    <button class="tab-button detail-tab" data-detail-tab="tarefa">💻 Tarefa SP</button>
+                <div class="tab-bar" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button id="detailTabProva" class="btn-primary" style="background: #0a2f6c; margin:0;">📝 Prova Paulista</button>
+                    <button id="detailTabTarefa" class="btn-primary" style="background: #6c757d; margin:0;">💻 Tarefa SP</button>
                 </div>
                 <div id="detailProvaPanel">
                     <div class="week-tabs" id="detailProvaWeeks"></div>
@@ -212,11 +201,13 @@
         let currentRole = null; // 'school' or 'pec_admin'
         let currentEscolaNome = null;
         let savedChecklists = { prova: {}, tarefa: {} };
-        let activeTab = 'prova';
-        let activeWeek = 1;
+        let activeSchoolTab = 'prova';
+        let activeSchoolWeek = 1;
 
         let selectedSchoolName = null;
         let selectedSchoolData = null;
+        let detailActiveTab = 'prova';
+        let detailActiveWeek = 1;
 
         function populateEscolas() {
             const select = document.getElementById('cadastroEscola');
@@ -229,21 +220,11 @@
             });
         }
 
-        function updateCountdown() {
-            const target = new Date(2026, 3, 14);
-            const today = new Date();
-            const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-            document.getElementById('dias').innerText = diff > 0 ? diff : 0;
-        }
-        setInterval(updateCountdown, 86400000);
-        updateCountdown();
-
-        // ==================== FUNÇÕES DO PAINEL ESCOLA ====================
+        // ==================== FUNÇÕES DA ESCOLA ====================
         function renderSchoolChecklists() {
-            const type = activeTab;
-            const data = checklistsData[type];
-            const weekKey = `semana${activeWeek}`;
-            const items = data[weekKey] || [];
+            const type = activeSchoolTab;
+            const weekKey = `semana${activeSchoolWeek}`;
+            const items = checklistsData[type][weekKey] || [];
             const saved = savedChecklists[type]?.[weekKey] || {};
             const container = document.getElementById(`${type}Checklist`);
             if (!container) return;
@@ -278,13 +259,13 @@
             weeks.forEach(w => {
                 const btn1 = document.createElement('button');
                 btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
-                btn1.className = `week-btn ${activeTab === 'prova' && activeWeek === w ? 'active' : ''}`;
-                btn1.onclick = () => { activeWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
+                btn1.className = `week-btn ${activeSchoolTab === 'prova' && activeSchoolWeek === w ? 'active' : ''}`;
+                btn1.onclick = () => { activeSchoolWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
                 provaContainer.appendChild(btn1);
                 const btn2 = document.createElement('button');
                 btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
-                btn2.className = `week-btn ${activeTab === 'tarefa' && activeWeek === w ? 'active' : ''}`;
-                btn2.onclick = () => { activeWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
+                btn2.className = `week-btn ${activeSchoolTab === 'tarefa' && activeSchoolWeek === w ? 'active' : ''}`;
+                btn2.onclick = () => { activeSchoolWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
                 tarefaContainer.appendChild(btn2);
             });
         }
@@ -304,7 +285,6 @@
                 savedChecklists = data.checklist_data || { prova: {}, tarefa: {} };
                 currentEscolaNome = data.escola_nome;
             } else {
-                // Tenta pegar dos metadados
                 currentEscolaNome = currentUser.user_metadata?.escola_nome || "Escola não definida";
                 savedChecklists = { prova: {}, tarefa: {} };
                 await supabase.from('checklist_escolas').insert([{
@@ -314,6 +294,7 @@
                 }]);
             }
             document.getElementById('userNameDisplay').innerHTML = `📌 ${currentEscolaNome}`;
+            document.getElementById('schoolNameTitle').innerHTML = `📋 Checklist - ${currentEscolaNome}`;
             renderSchoolWeeks();
             renderSchoolChecklists();
         }
@@ -339,8 +320,7 @@
         }
 
         function computeProgressForSchool(checklistData) {
-            let totalItems = 0;
-            let totalChecked = 0;
+            let totalItems = 0, totalChecked = 0;
             for (let type of ['prova', 'tarefa']) {
                 for (let w = 1; w <= 4; w++) {
                     const weekKey = `semana${w}`;
@@ -363,9 +343,7 @@
 
             const dashboardDiv = document.getElementById('pecDashboard');
             if (!dashboardDiv) return;
-            dashboardDiv.innerHTML = '<h3>📋 Clique em uma escola para ver os detalhes</h3>';
-            
-            // Percorre TODAS as escolas da lista fixa
+            dashboardDiv.innerHTML = '';
             for (const escola of escolasList) {
                 const data = map.get(escola) || { prova: {}, tarefa: {} };
                 const { percent } = computeProgressForSchool(data);
@@ -387,7 +365,7 @@
             }
         }
 
-        async function showSchoolDetail(escolaNome, checklistData) {
+        function showSchoolDetail(escolaNome, checklistData) {
             selectedSchoolName = escolaNome;
             selectedSchoolData = checklistData || { prova: {}, tarefa: {} };
             document.getElementById('detailSchoolName').innerHTML = `<i class="fas fa-school"></i> ${escolaNome} - Checklist (somente leitura)`;
@@ -397,29 +375,19 @@
         }
 
         function renderSchoolDetailChecklists() {
-            if (typeof window.detailActiveTab === 'undefined') window.detailActiveTab = 'prova';
-            if (typeof window.detailActiveWeek === 'undefined') window.detailActiveWeek = 1;
-            
-            const typeDetail = window.detailActiveTab;
-            const week = window.detailActiveWeek;
-            const weekKey = `semana${week}`;
-            const items = checklistsData[typeDetail][weekKey] || [];
-            const saved = selectedSchoolData?.[typeDetail]?.[weekKey] || {};
-            
+            const weekKey = `semana${detailActiveWeek}`;
+            const items = checklistsData[detailActiveTab][weekKey] || [];
+            const saved = selectedSchoolData?.[detailActiveTab]?.[weekKey] || {};
             const provaContainer = document.getElementById('detailProvaChecklist');
             const tarefaContainer = document.getElementById('detailTarefaChecklist');
             if (!provaContainer || !tarefaContainer) return;
-            
-            if (typeDetail === 'prova') {
+            if (detailActiveTab === 'prova') {
                 provaContainer.innerHTML = '';
                 items.forEach((item, idx) => {
                     const isChecked = saved[idx] === true;
                     const div = document.createElement('div');
                     div.className = 'checklist-item';
-                    div.innerHTML = `
-                        <input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled>
-                        <label style="opacity:0.8;">${item}</label>
-                    `;
+                    div.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
                     provaContainer.appendChild(div);
                 });
             } else {
@@ -428,10 +396,7 @@
                     const isChecked = saved[idx] === true;
                     const div = document.createElement('div');
                     div.className = 'checklist-item';
-                    div.innerHTML = `
-                        <input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled>
-                        <label style="opacity:0.8;">${item}</label>
-                    `;
+                    div.innerHTML = `<input type="checkbox" ${isChecked ? 'checked' : ''} disabled><label style="opacity:0.8;">${item}</label>`;
                     tarefaContainer.appendChild(div);
                 });
             }
@@ -447,29 +412,14 @@
             weeks.forEach(w => {
                 const btn1 = document.createElement('button');
                 btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
-                btn1.className = `week-btn ${window.detailActiveTab === 'prova' && window.detailActiveWeek === w ? 'active' : ''}`;
-                btn1.onclick = () => { window.detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
+                btn1.className = `week-btn ${detailActiveTab === 'prova' && detailActiveWeek === w ? 'active' : ''}`;
+                btn1.onclick = () => { detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
                 provaContainer.appendChild(btn1);
                 const btn2 = document.createElement('button');
                 btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
-                btn2.className = `week-btn ${window.detailActiveTab === 'tarefa' && window.detailActiveWeek === w ? 'active' : ''}`;
-                btn2.onclick = () => { window.detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
+                btn2.className = `week-btn ${detailActiveTab === 'tarefa' && detailActiveWeek === w ? 'active' : ''}`;
+                btn2.onclick = () => { detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
                 tarefaContainer.appendChild(btn2);
-            });
-        }
-
-        function initDetailTabs() {
-            document.querySelectorAll('.detail-tab').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    window.detailActiveTab = btn.dataset.detailTab;
-                    document.getElementById('detailProvaPanel').style.display = window.detailActiveTab === 'prova' ? 'block' : 'none';
-                    document.getElementById('detailTarefaPanel').style.display = window.detailActiveTab === 'tarefa' ? 'block' : 'none';
-                    window.detailActiveWeek = 1;
-                    renderDetailWeeks();
-                    renderSchoolDetailChecklists();
-                };
             });
         }
 
@@ -510,7 +460,6 @@
             currentUser = data.user;
             currentRole = 'pec_admin';
             document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${email}`;
-            await renderPecDashboard();
             return true;
         }
 
@@ -522,15 +471,6 @@
         document.getElementById('showPecLoginBtn').onclick = () => {
             document.getElementById('schoolLoginPanel').style.display = 'none';
             document.getElementById('pecLoginPanel').style.display = 'block';
-        };
-        document.getElementById('showSchoolLoginFormBtn').onclick = () => {
-            document.getElementById('schoolLoginForm').style.display = 'block';
-            document.getElementById('schoolCadastroForm').style.display = 'none';
-        };
-        document.getElementById('showSchoolCadastroFormBtn').onclick = () => {
-            document.getElementById('schoolLoginForm').style.display = 'none';
-            document.getElementById('schoolCadastroForm').style.display = 'block';
-            populateEscolas();
         };
         document.getElementById('doLoginBtn').onclick = async () => {
             const email = document.getElementById('loginEmail').value;
@@ -555,10 +495,10 @@
                 document.getElementById('loginPanel').style.display = 'none';
                 document.getElementById('pecPanel').style.display = 'block';
                 document.getElementById('userInfo').style.display = 'flex';
-                initDetailTabs();
-                window.detailActiveTab = 'prova';
-                window.detailActiveWeek = 1;
-                renderDetailWeeks();
+                // Reset views
+                document.getElementById('pecMainView').style.display = 'block';
+                document.getElementById('pecSchoolDetailView').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'none';
             }
         };
         document.getElementById('logoutBtn').onclick = async () => {
@@ -568,57 +508,89 @@
             document.getElementById('schoolPanel').style.display = 'none';
             document.getElementById('pecPanel').style.display = 'none';
             document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('schoolLoginPanel').style.display = 'block';
+            document.getElementById('pecLoginPanel').style.display = 'none';
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
             document.getElementById('pecEmail').value = '';
             document.getElementById('pecPassword').value = '';
-            document.getElementById('schoolLoginPanel').style.display = 'block';
-            document.getElementById('pecLoginPanel').style.display = 'none';
-            document.getElementById('pecMainView').style.display = 'block';
-            document.getElementById('pecSchoolDetailView').style.display = 'none';
         };
         document.getElementById('saveProvaBtn').onclick = saveSchoolChecklists;
         document.getElementById('saveTarefaBtn').onclick = saveSchoolChecklists;
+
+        // Botão para carregar o dashboard (simples)
+        document.getElementById('loadDashboardBtn').onclick = async () => {
+            const container = document.getElementById('dashboardContainer');
+            if (container.style.display === 'none') {
+                await renderPecDashboard();
+                container.style.display = 'block';
+            } else {
+                // Se já estiver visível, recarrega os dados
+                await renderPecDashboard();
+            }
+        };
         document.getElementById('backToDashboardBtn').onclick = () => {
             document.getElementById('pecMainView').style.display = 'block';
             document.getElementById('pecSchoolDetailView').style.display = 'none';
-            renderPecDashboard();
-        };
-        document.getElementById('refreshDashboardBtn').onclick = () => {
-            renderPecDashboard();
+            // Não esconde o dashboardContainer, apenas volta
         };
 
-        // Abas para escola
-        document.querySelectorAll('#schoolPanel .tab-button').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('#schoolPanel .tab-button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeTab = btn.dataset.tab;
-                document.getElementById('provaPanel').style.display = activeTab === 'prova' ? 'block' : 'none';
-                document.getElementById('tarefaPanel').style.display = activeTab === 'tarefa' ? 'block' : 'none';
-                activeWeek = 1;
-                renderSchoolWeeks();
-                renderSchoolChecklists();
-            };
-        });
+        // Abas da escola
+        document.getElementById('schoolTabProva').onclick = () => {
+            activeSchoolTab = 'prova';
+            document.getElementById('schoolProvaPanel').style.display = 'block';
+            document.getElementById('schoolTarefaPanel').style.display = 'none';
+            document.getElementById('schoolTabProva').style.background = '#0a2f6c';
+            document.getElementById('schoolTabTarefa').style.background = '#6c757d';
+            activeSchoolWeek = 1;
+            renderSchoolWeeks();
+            renderSchoolChecklists();
+        };
+        document.getElementById('schoolTabTarefa').onclick = () => {
+            activeSchoolTab = 'tarefa';
+            document.getElementById('schoolProvaPanel').style.display = 'none';
+            document.getElementById('schoolTarefaPanel').style.display = 'block';
+            document.getElementById('schoolTabTarefa').style.background = '#0a2f6c';
+            document.getElementById('schoolTabProva').style.background = '#6c757d';
+            activeSchoolWeek = 1;
+            renderSchoolWeeks();
+            renderSchoolChecklists();
+        };
 
-        // Verificar sessão existente
+        // Abas do detalhe (admin)
+        document.getElementById('detailTabProva').onclick = () => {
+            detailActiveTab = 'prova';
+            document.getElementById('detailProvaPanel').style.display = 'block';
+            document.getElementById('detailTarefaPanel').style.display = 'none';
+            document.getElementById('detailTabProva').style.background = '#0a2f6c';
+            document.getElementById('detailTabTarefa').style.background = '#6c757d';
+            detailActiveWeek = 1;
+            renderDetailWeeks();
+            renderSchoolDetailChecklists();
+        };
+        document.getElementById('detailTabTarefa').onclick = () => {
+            detailActiveTab = 'tarefa';
+            document.getElementById('detailProvaPanel').style.display = 'none';
+            document.getElementById('detailTarefaPanel').style.display = 'block';
+            document.getElementById('detailTabTarefa').style.background = '#0a2f6c';
+            document.getElementById('detailTabProva').style.background = '#6c757d';
+            detailActiveWeek = 1;
+            renderDetailWeeks();
+            renderSchoolDetailChecklists();
+        };
+
+        // Inicialização
+        populateEscolas();
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 currentUser = session.user;
                 const role = session.user.user_metadata?.role;
                 if (role === 'pec_admin') {
                     currentRole = 'pec_admin';
-                    renderPecDashboard().then(() => {
-                        document.getElementById('loginPanel').style.display = 'none';
-                        document.getElementById('pecPanel').style.display = 'block';
-                        document.getElementById('userInfo').style.display = 'flex';
-                        document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${session.user.email}`;
-                        initDetailTabs();
-                        window.detailActiveTab = 'prova';
-                        window.detailActiveWeek = 1;
-                        renderDetailWeeks();
-                    });
+                    document.getElementById('loginPanel').style.display = 'none';
+                    document.getElementById('pecPanel').style.display = 'block';
+                    document.getElementById('userInfo').style.display = 'flex';
+                    document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${session.user.email}`;
                 } else {
                     currentRole = 'school';
                     loadSchoolData().then(() => {
