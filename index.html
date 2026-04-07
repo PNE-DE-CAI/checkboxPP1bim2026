@@ -36,10 +36,13 @@
         .date-range { font-size: 0.7rem; color: #666; margin-left: 6px; font-weight: normal; }
         .progress-bar { background: #e0e0e0; border-radius: 30px; height: 8px; overflow: hidden; margin: 5px 0; }
         .progress-fill { background: var(--vermelho); width: 0%; height: 100%; border-radius: 30px; }
-        .school-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .school-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
+        .school-row:hover { background: #f0f0f0; }
         .school-name { font-weight: 600; width: 30%; }
         .school-progress { width: 60%; }
         .status-icon { width: 10%; text-align: center; }
+        .back-btn { background: #6c757d; border: none; padding: 8px 16px; border-radius: 40px; color: white; cursor: pointer; margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 8px; }
+        .readonly-checkbox { opacity: 0.6; pointer-events: none; }
         footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #b4c8e0; font-size: 0.8rem; border-top: 1px solid #2c4c6e; }
         @media (max-width: 700px) { .container { padding: 12px; } .school-row { flex-direction: column; align-items: flex-start; gap: 8px; } .school-name, .school-progress, .status-icon { width: 100%; } }
     </style>
@@ -58,13 +61,13 @@
         </div>
     </div>
 
-    <!-- Tela de Login / Cadastro (Escola ou PEC) -->
+    <!-- Tela de Login / Cadastro -->
     <div id="loginPanel">
         <div class="card" style="max-width: 500px; margin: 0 auto;">
             <h2>🎓 Acesso ao Sistema</h2>
             <div style="margin-bottom: 20px; display: flex; gap: 10px;">
                 <button id="showSchoolLoginBtn" class="save-btn" style="background: var(--azul-escuro); flex:1;">🏫 Escola</button>
-                <button id="showPecLoginBtn" class="save-btn" style="background: #6c757d; flex:1;">👩‍🏫 PEC</button>
+                <button id="showPecLoginBtn" class="save-btn" style="background: #6c757d; flex:1;">👩‍🏫 PEC Admin</button>
             </div>
             <div id="schoolLoginPanel" style="display: block;">
                 <div style="margin-bottom: 15px;">
@@ -86,10 +89,10 @@
                 </div>
             </div>
             <div id="pecLoginPanel" style="display: none;">
-                <input type="email" id="pecEmail" placeholder="E-mail do PEC" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+                <input type="email" id="pecEmail" placeholder="E-mail do PEC Admin" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
                 <input type="password" id="pecPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                <button id="doPecLoginBtn" class="save-btn" style="width:100%; justify-content: center;">Entrar como PEC</button>
-                <p style="margin-top:8px; font-size:0.8rem;">⚠️ PECs: utilize seu e-mail institucional. Se não tiver cadastro, solicite à URE.</p>
+                <button id="doPecLoginBtn" class="save-btn" style="width:100%; justify-content: center;">Entrar como PEC Admin</button>
+                <p style="margin-top:8px; font-size:0.8rem;">⚠️ PEC Admin: visualiza todas as escolas e o progresso individual.</p>
             </div>
         </div>
     </div>
@@ -112,11 +115,32 @@
         </div>
     </div>
 
-    <!-- Painel do PEC (Dashboard) -->
+    <!-- Painel do PEC Admin (Dashboard geral) -->
     <div id="pecPanel" style="display: none;">
-        <div class="card">
-            <h2><i class="fas fa-chart-line"></i> Dashboard de Progresso das Escolas</h2>
-            <div id="pecDashboard"></div>
+        <div id="pecMainView">
+            <div class="card">
+                <h2><i class="fas fa-chart-line"></i> Dashboard de Progresso das Escolas</h2>
+                <div id="pecDashboard"></div>
+            </div>
+        </div>
+        <div id="pecSchoolDetailView" style="display: none;">
+            <button id="backToDashboardBtn" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
+            <div class="card">
+                <h2 id="detailSchoolName"></h2>
+                <div class="tab-bar">
+                    <button class="tab-button detail-tab active" data-detail-tab="prova">📝 Prova Paulista</button>
+                    <button class="tab-button detail-tab" data-detail-tab="tarefa">💻 Tarefa SP</button>
+                </div>
+                <div id="detailProvaPanel">
+                    <div class="week-tabs" id="detailProvaWeeks"></div>
+                    <div id="detailProvaChecklist"></div>
+                </div>
+                <div id="detailTarefaPanel" style="display: none;">
+                    <div class="week-tabs" id="detailTarefaWeeks"></div>
+                    <div id="detailTarefaChecklist"></div>
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.8rem; color: #666;"><i class="fas fa-eye"></i> Visualização apenas de leitura</p>
+            </div>
         </div>
     </div>
     <footer>Checklist oficial 2026 · URE Caieiras</footer>
@@ -128,7 +152,7 @@
         window._checklistInitialized = true;
 
 // ==================== CONFIGURAÇÃO SUPABASE ====================
-        const SUPABASE_URL = 'https://mrpiwlnzbksjvcaxerrr.supabase.co';
+const SUPABASE_URL = 'https://mrpiwlnzbksjvcaxerrr.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_XR4ym7Nz1sL_7Ap5kpmzgw_7mxWANuI';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ================================================================
@@ -161,86 +185,36 @@
             "E.E. ZILTON BICUDO – PROF.", "E.E. OLINDO DÁRTORA – DR."
         ];
 
-        // Definição das datas das semanas
         const weekDates = {
-            prova: {
-                1: "06/04 a 10/04",
-                2: "13/04 a 17/04",
-                3: "20/04 a 24/04",
-                4: "27/04 a 30/04"
-            },
-            tarefa: {
-                1: "06/04 a 13/04",
-                2: "14/04 a 20/04",
-                3: "21/04 a 27/04",
-                4: "28/04 a 30/04"
-            }
+            prova: { 1: "06/04 a 10/04", 2: "13/04 a 17/04", 3: "20/04 a 24/04", 4: "27/04 a 30/04" },
+            tarefa: { 1: "06/04 a 13/04", 2: "14/04 a 20/04", 3: "21/04 a 27/04", 4: "28/04 a 30/04" }
         };
 
         const checklistsData = {
             prova: {
-                semana1: [
-                    "Repassar com a equipe informações essenciais (modelos de prova, regras de aplicação, conduta dos aplicadores)",
-                    "Organizar equipe de aplicadores e salas necessárias",
-                    "Planejar atendimento da educação especial (tempo extra, sala extra, apoio especializado)",
-                    "Preparar ambiente com silêncio, organização e acessibilidade",
-                    "Reforçar regras de aplicação e reconhecimento do caderno/cartão de resposta",
-                    "Garantir locais adequados para recebimento das provas"
-                ],
-                semana2: [
-                    "Na URE, conferir quantidade de caixas, lacres e identificação externa",
-                    "Verificar nas caixas qual delas contém as etiquetas dos estudantes e comunicar divergências",
-                    "Abrir as caixas para conferir a quantidade de envelopes (sem abrir os envelopes)",
-                    "Abrir os envelopes apenas nos dias de aplicação (14 a 17/04)",
-                    "Antes de iniciar: registrar horário na lousa, recolher celulares e organizar mochilas",
-                    "Distribuir as provas corretamente por cor (roxo, verde, laranja)",
-                    "Após início da prova, colar etiqueta nominal, conferir cabeçalho e coletar assinatura",
-                    "Garantir prova individual, uso de caneta azul/preta e tempo entre 1h e 2h30",
-                    "Recolher todos os cadernos e não destacar a folha de respostas",
-                    "Subir os cartões-resposta no mesmo dia, conferindo antes de salvar"
-                ],
-                semana3: [
-                    "Finalizar a leitura de cartões pendentes (até 23/04)",
-                    "Usar fluxo manual em caso de problema com foto ou falta de etiqueta",
-                    "Revisar qualidade das imagens (folha inteira, reta, sem sombra, sem corte)"
-                ],
-                semana4: [
-                    "Acompanhar publicação dos resultados no Diário de Classe (30/04)",
-                    "Organizar devolutiva interna com equipe gestora e pedagógica"
-                ]
+                semana1: [ "Repassar com a equipe informações essenciais (modelos de prova, regras de aplicação, conduta dos aplicadores)", "Organizar equipe de aplicadores e salas necessárias", "Planejar atendimento da educação especial (tempo extra, sala extra, apoio especializado)", "Preparar ambiente com silêncio, organização e acessibilidade", "Reforçar regras de aplicação e reconhecimento do caderno/cartão de resposta", "Garantir locais adequados para recebimento das provas" ],
+                semana2: [ "Na URE, conferir quantidade de caixas, lacres e identificação externa", "Verificar nas caixas qual delas contém as etiquetas dos estudantes e comunicar divergências", "Abrir as caixas para conferir a quantidade de envelopes (sem abrir os envelopes)", "Abrir os envelopes apenas nos dias de aplicação (14 a 17/04)", "Antes de iniciar: registrar horário na lousa, recolher celulares e organizar mochilas", "Distribuir as provas corretamente por cor (roxo, verde, laranja)", "Após início da prova, colar etiqueta nominal, conferir cabeçalho e coletar assinatura", "Garantir prova individual, uso de caneta azul/preta e tempo entre 1h e 2h30", "Recolher todos os cadernos e não destacar a folha de respostas", "Subir os cartões-resposta no mesmo dia, conferindo antes de salvar" ],
+                semana3: [ "Finalizar a leitura de cartões pendentes (até 23/04)", "Usar fluxo manual em caso de problema com foto ou falta de etiqueta", "Revisar qualidade das imagens (folha inteira, reta, sem sombra, sem corte)" ],
+                semana4: [ "Acompanhar publicação dos resultados no Diário de Classe (30/04)", "Organizar devolutiva interna com equipe gestora e pedagógica" ]
             },
             tarefa: {
-                semana1: [
-                    "Informar professores e estudantes sobre a janela de realização (06 a 13/04)",
-                    "Organizar quando os estudantes farão as tarefas (aula, contraturno, reforço ou casa)",
-                    "Acompanhar se todos acessaram as quatro tarefas previstas",
-                    "Orientar os estudantes a finalizar dentro do prazo",
-                    "Orientar professores sobre uso da ferramenta para verificar aprendizagem",
-                    "Explicar que a discursiva passa por correção assistida por IA"
-                ],
-                semana2: [
-                    "Mapear tarefas em rascunho, submetidas e pendentes",
-                    "Apoiar estudantes cuja resposta discursiva foi devolvida como pendente",
-                    "Identificar barreiras de uso (tempo, valor pedagógico, acesso/infraestrutura)"
-                ],
-                semana3: [
-                    "Verificar quantas tarefas foram realizadas no prazo",
-                    "Verificar quantas ficaram fora do prazo, incompletas ou não realizadas",
-                    "Priorizar ações com turmas e estudantes com maior número de pendências"
-                ],
-                semana4: [
-                    "Usar os dados disponíveis para devolutiva pedagógica e planejamento de retomadas",
-                    "Registrar percepções da equipe sobre engajamento e dificuldades"
-                ]
+                semana1: [ "Informar professores e estudantes sobre a janela de realização (06 a 13/04)", "Organizar quando os estudantes farão as tarefas (aula, contraturno, reforço ou casa)", "Acompanhar se todos acessaram as quatro tarefas previstas", "Orientar os estudantes a finalizar dentro do prazo", "Orientar professores sobre uso da ferramenta para verificar aprendizagem", "Explicar que a discursiva passa por correção assistida por IA" ],
+                semana2: [ "Mapear tarefas em rascunho, submetidas e pendentes", "Apoiar estudantes cuja resposta discursiva foi devolvida como pendente", "Identificar barreiras de uso (tempo, valor pedagógico, acesso/infraestrutura)" ],
+                semana3: [ "Verificar quantas tarefas foram realizadas no prazo", "Verificar quantas ficaram fora do prazo, incompletas ou não realizadas", "Priorizar ações com turmas e estudantes com maior número de pendências" ],
+                semana4: [ "Usar os dados disponíveis para devolutiva pedagógica e planejamento de retomadas", "Registrar percepções da equipe sobre engajamento e dificuldades" ]
             }
         };
 
         let currentUser = null;
-        let currentEscola = null;
-        let currentRole = null; // 'school' or 'pec'
+        let currentRole = null; // 'school' or 'pec_admin'
+        let currentEscolaNome = null;
         let savedChecklists = { prova: {}, tarefa: {} };
         let activeTab = 'prova';
         let activeWeek = 1;
+
+        // Variáveis para visualização detalhada do PEC
+        let selectedSchoolName = null;
+        let selectedSchoolData = null;
 
         function populateEscolas() {
             const select = document.getElementById('cadastroEscola');
@@ -293,21 +267,20 @@
         }
 
         function renderSchoolWeeks() {
-            const weeks = [1, 2, 3, 4];
+            const weeks = [1,2,3,4];
             const provaContainer = document.getElementById('provaWeeks');
             const tarefaContainer = document.getElementById('tarefaWeeks');
+            if (!provaContainer || !tarefaContainer) return;
             provaContainer.innerHTML = '';
             tarefaContainer.innerHTML = '';
             weeks.forEach(w => {
-                const dateRangeProva = weekDates.prova[w];
-                const dateRangeTarefa = weekDates.tarefa[w];
                 const btn1 = document.createElement('button');
-                btn1.innerHTML = `Semana ${w} <span class="date-range">(${dateRangeProva})</span>`;
+                btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
                 btn1.className = `week-btn ${activeTab === 'prova' && activeWeek === w ? 'active' : ''}`;
                 btn1.onclick = () => { activeWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
                 provaContainer.appendChild(btn1);
                 const btn2 = document.createElement('button');
-                btn2.innerHTML = `Semana ${w} <span class="date-range">(${dateRangeTarefa})</span>`;
+                btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
                 btn2.className = `week-btn ${activeTab === 'tarefa' && activeWeek === w ? 'active' : ''}`;
                 btn2.onclick = () => { activeWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
                 tarefaContainer.appendChild(btn2);
@@ -327,17 +300,18 @@
             }
             if (data) {
                 savedChecklists = data.checklist_data || { prova: {}, tarefa: {} };
-                currentEscola = data.escola_nome;
+                currentEscolaNome = data.escola_nome;
             } else {
+                // Tenta pegar dos metadados
+                currentEscolaNome = currentUser.user_metadata?.escola_nome || "Escola não definida";
                 savedChecklists = { prova: {}, tarefa: {} };
-                currentEscola = "Escola não definida";
                 await supabase.from('checklist_escolas').insert([{
                     user_id: currentUser.id,
-                    escola_nome: currentEscola,
+                    escola_nome: currentEscolaNome,
                     checklist_data: savedChecklists
                 }]);
             }
-            document.getElementById('userNameDisplay').innerHTML = `📌 ${currentEscola}`;
+            document.getElementById('userNameDisplay').innerHTML = `📌 ${currentEscolaNome}`;
             renderSchoolWeeks();
             renderSchoolChecklists();
         }
@@ -352,52 +326,148 @@
             else alert('Progresso salvo com sucesso!');
         }
 
-        // ==================== FUNÇÕES DO PAINEL PEC ====================
-        async function loadPecDashboard() {
-            const { data: escolasRegistradas, error } = await supabase
-                .from('checklist_escolas')
-                .select('*');
+        // ==================== FUNÇÕES DO PEC ADMIN ====================
+        async function fetchAllSchoolsData() {
+            const { data, error } = await supabase.from('checklist_escolas').select('*');
             if (error) {
                 console.error(error);
-                return;
+                return [];
             }
-            const progressMap = {};
-            escolasRegistradas.forEach(reg => {
-                progressMap[reg.escola_nome] = reg.checklist_data;
-            });
+            return data;
+        }
 
-            const dashboardDiv = document.getElementById('pecDashboard');
-            dashboardDiv.innerHTML = '<h3>📋 Acompanhamento das Escolas</h3>';
-            for (const escola of escolasList) {
-                const data = progressMap[escola] || { prova: {}, tarefa: {} };
-                let totalItems = 0;
-                let totalChecked = 0;
-                for (let type of ['prova', 'tarefa']) {
-                    for (let w = 1; w <= 4; w++) {
-                        const weekKey = `semana${w}`;
-                        const items = checklistsData[type][weekKey] || [];
-                        const saved = data[type]?.[weekKey] || {};
-                        totalItems += items.length;
-                        for (let i = 0; i < items.length; i++) {
-                            if (saved[i] === true) totalChecked++;
-                        }
+        function computeProgressForSchool(checklistData) {
+            let totalItems = 0;
+            let totalChecked = 0;
+            for (let type of ['prova', 'tarefa']) {
+                for (let w = 1; w <= 4; w++) {
+                    const weekKey = `semana${w}`;
+                    const items = checklistsData[type][weekKey] || [];
+                    const saved = checklistData?.[type]?.[weekKey] || {};
+                    totalItems += items.length;
+                    for (let i = 0; i < items.length; i++) {
+                        if (saved[i] === true) totalChecked++;
                     }
                 }
-                const percent = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
-                const hasData = totalChecked > 0;
+            }
+            const percent = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
+            return { percent, totalItems, totalChecked };
+        }
+
+        async function renderPecDashboard() {
+            const schoolsData = await fetchAllSchoolsData();
+            const map = new Map();
+            schoolsData.forEach(s => map.set(s.escola_nome, s.checklist_data));
+
+            const dashboardDiv = document.getElementById('pecDashboard');
+            dashboardDiv.innerHTML = '<h3>📋 Clique em uma escola para ver os detalhes</h3>';
+            for (const escola of escolasList) {
+                const data = map.get(escola) || { prova: {}, tarefa: {} };
+                const { percent } = computeProgressForSchool(data);
+                const hasData = Object.keys(data.prova).length > 0 || Object.keys(data.tarefa).length > 0;
                 const statusIcon = hasData ? (percent === 100 ? '✅' : '⏳') : '❌';
                 const statusText = hasData ? (percent === 100 ? 'Completo' : `${percent}% concluído`) : 'Não iniciado';
-                dashboardDiv.innerHTML += `
-                    <div class="school-row">
-                        <div class="school-name">${escola}</div>
-                        <div class="school-progress">
-                            <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div>
-                            <small>${statusText}</small>
-                        </div>
-                        <div class="status-icon">${statusIcon}</div>
+                const row = document.createElement('div');
+                row.className = 'school-row';
+                row.onclick = () => showSchoolDetail(escola, data);
+                row.innerHTML = `
+                    <div class="school-name">${escola}</div>
+                    <div class="school-progress">
+                        <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div>
+                        <small>${statusText}</small>
                     </div>
+                    <div class="status-icon">${statusIcon}</div>
                 `;
+                dashboardDiv.appendChild(row);
             }
+        }
+
+        function showSchoolDetail(escolaNome, checklistData) {
+            selectedSchoolName = escolaNome;
+            selectedSchoolData = checklistData || { prova: {}, tarefa: {} };
+            document.getElementById('detailSchoolName').innerHTML = `<i class="fas fa-school"></i> ${escolaNome} - Checklist (somente leitura)`;
+            document.getElementById('pecMainView').style.display = 'none';
+            document.getElementById('pecSchoolDetailView').style.display = 'block';
+            renderSchoolDetailChecklists();
+        }
+
+        function renderSchoolDetailChecklists() {
+            const type = activeTab; // reutiliza activeTab mas para detalhe usaremos detailActiveTab
+            // Vamos criar variáveis separadas para detalhe
+            if (typeof window.detailActiveTab === 'undefined') window.detailActiveTab = 'prova';
+            if (typeof window.detailActiveWeek === 'undefined') window.detailActiveWeek = 1;
+            
+            const typeDetail = window.detailActiveTab;
+            const week = window.detailActiveWeek;
+            const weekKey = `semana${week}`;
+            const items = checklistsData[typeDetail][weekKey] || [];
+            const saved = selectedSchoolData?.[typeDetail]?.[weekKey] || {};
+            
+            const provaContainer = document.getElementById('detailProvaChecklist');
+            const tarefaContainer = document.getElementById('detailTarefaChecklist');
+            if (!provaContainer || !tarefaContainer) return;
+            
+            if (typeDetail === 'prova') {
+                provaContainer.innerHTML = '';
+                items.forEach((item, idx) => {
+                    const isChecked = saved[idx] === true;
+                    const div = document.createElement('div');
+                    div.className = 'checklist-item';
+                    div.innerHTML = `
+                        <input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled>
+                        <label style="opacity:0.8;">${item}</label>
+                    `;
+                    provaContainer.appendChild(div);
+                });
+            } else {
+                tarefaContainer.innerHTML = '';
+                items.forEach((item, idx) => {
+                    const isChecked = saved[idx] === true;
+                    const div = document.createElement('div');
+                    div.className = 'checklist-item';
+                    div.innerHTML = `
+                        <input type="checkbox" class="readonly-checkbox" ${isChecked ? 'checked' : ''} disabled>
+                        <label style="opacity:0.8;">${item}</label>
+                    `;
+                    tarefaContainer.appendChild(div);
+                });
+            }
+        }
+
+        function renderDetailWeeks() {
+            const weeks = [1,2,3,4];
+            const provaContainer = document.getElementById('detailProvaWeeks');
+            const tarefaContainer = document.getElementById('detailTarefaWeeks');
+            if (!provaContainer || !tarefaContainer) return;
+            provaContainer.innerHTML = '';
+            tarefaContainer.innerHTML = '';
+            weeks.forEach(w => {
+                const btn1 = document.createElement('button');
+                btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
+                btn1.className = `week-btn ${window.detailActiveTab === 'prova' && window.detailActiveWeek === w ? 'active' : ''}`;
+                btn1.onclick = () => { window.detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
+                provaContainer.appendChild(btn1);
+                const btn2 = document.createElement('button');
+                btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
+                btn2.className = `week-btn ${window.detailActiveTab === 'tarefa' && window.detailActiveWeek === w ? 'active' : ''}`;
+                btn2.onclick = () => { window.detailActiveWeek = w; renderDetailWeeks(); renderSchoolDetailChecklists(); };
+                tarefaContainer.appendChild(btn2);
+            });
+        }
+
+        function initDetailTabs() {
+            document.querySelectorAll('.detail-tab').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.detail-tab').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    window.detailActiveTab = btn.dataset.detailTab;
+                    document.getElementById('detailProvaPanel').style.display = window.detailActiveTab === 'prova' ? 'block' : 'none';
+                    document.getElementById('detailTarefaPanel').style.display = window.detailActiveTab === 'tarefa' ? 'block' : 'none';
+                    window.detailActiveWeek = 1;
+                    renderDetailWeeks();
+                    renderSchoolDetailChecklists();
+                };
+            });
         }
 
         // ==================== AUTENTICAÇÃO ====================
@@ -416,23 +486,29 @@
                 options: { data: { escola_nome: escola, role: 'school' } }
             });
             if (error) { alert('Erro: ' + error.message); return false; }
+            // Criar registro na tabela checklist_escolas
+            await supabase.from('checklist_escolas').insert([{
+                user_id: data.user.id,
+                escola_nome: escola,
+                checklist_data: { prova: {}, tarefa: {} }
+            }]);
             alert('Cadastro realizado! Faça login.');
             return true;
         }
 
-        async function pecLogin(email, password) {
+        async function pecAdminLogin(email, password) {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) { alert('Erro: ' + error.message); return false; }
             const role = data.user.user_metadata?.role;
-            if (role !== 'pec') {
-                alert('Acesso negado. Você não tem permissão de PEC.');
+            if (role !== 'pec_admin') {
+                alert('Acesso negado. Você não tem permissão de PEC Admin.');
                 await supabase.auth.signOut();
                 return false;
             }
             currentUser = data.user;
-            currentRole = 'pec';
-            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC: ${email}`;
-            await loadPecDashboard();
+            currentRole = 'pec_admin';
+            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${email}`;
+            await renderPecDashboard();
             return true;
         }
 
@@ -473,10 +549,15 @@
         document.getElementById('doPecLoginBtn').onclick = async () => {
             const email = document.getElementById('pecEmail').value;
             const pass = document.getElementById('pecPassword').value;
-            if (await pecLogin(email, pass)) {
+            if (await pecAdminLogin(email, pass)) {
                 document.getElementById('loginPanel').style.display = 'none';
                 document.getElementById('pecPanel').style.display = 'block';
                 document.getElementById('userInfo').style.display = 'flex';
+                // Inicializa tabs de detalhe
+                initDetailTabs();
+                window.detailActiveTab = 'prova';
+                window.detailActiveWeek = 1;
+                renderDetailWeeks();
             }
         };
         document.getElementById('logoutBtn').onclick = async () => {
@@ -492,9 +573,17 @@
             document.getElementById('pecPassword').value = '';
             document.getElementById('schoolLoginPanel').style.display = 'block';
             document.getElementById('pecLoginPanel').style.display = 'none';
+            // reset views
+            document.getElementById('pecMainView').style.display = 'block';
+            document.getElementById('pecSchoolDetailView').style.display = 'none';
         };
         document.getElementById('saveProvaBtn').onclick = saveSchoolChecklists;
         document.getElementById('saveTarefaBtn').onclick = saveSchoolChecklists;
+        document.getElementById('backToDashboardBtn').onclick = () => {
+            document.getElementById('pecMainView').style.display = 'block';
+            document.getElementById('pecSchoolDetailView').style.display = 'none';
+            renderPecDashboard();
+        };
 
         // Abas para escola
         document.querySelectorAll('#schoolPanel .tab-button').forEach(btn => {
@@ -515,13 +604,17 @@
             if (session) {
                 currentUser = session.user;
                 const role = session.user.user_metadata?.role;
-                if (role === 'pec') {
-                    currentRole = 'pec';
-                    loadPecDashboard().then(() => {
+                if (role === 'pec_admin') {
+                    currentRole = 'pec_admin';
+                    renderPecDashboard().then(() => {
                         document.getElementById('loginPanel').style.display = 'none';
                         document.getElementById('pecPanel').style.display = 'block';
                         document.getElementById('userInfo').style.display = 'flex';
-                        document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC: ${session.user.email}`;
+                        document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC Admin: ${session.user.email}`;
+                        initDetailTabs();
+                        window.detailActiveTab = 'prova';
+                        window.detailActiveWeek = 1;
+                        renderDetailWeeks();
                     });
                 } else {
                     currentRole = 'school';
