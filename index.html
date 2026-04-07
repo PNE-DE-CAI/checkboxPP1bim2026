@@ -33,8 +33,15 @@
         .checklist-item label { flex: 1; font-size: 0.95rem; color: var(--preto); cursor: pointer; }
         .save-btn { background: linear-gradient(135deg, #27ae60, #1e8449); border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; margin-top: 1rem; display: inline-flex; align-items: center; gap: 8px; }
         .save-btn:hover { transform: translateY(-2px); }
+        .date-range { font-size: 0.7rem; color: #666; margin-left: 6px; font-weight: normal; }
+        .progress-bar { background: #e0e0e0; border-radius: 30px; height: 8px; overflow: hidden; margin: 5px 0; }
+        .progress-fill { background: var(--vermelho); width: 0%; height: 100%; border-radius: 30px; }
+        .school-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .school-name { font-weight: 600; width: 30%; }
+        .school-progress { width: 60%; }
+        .status-icon { width: 10%; text-align: center; }
         footer { text-align: center; margin-top: 2rem; padding: 1rem; color: #b4c8e0; font-size: 0.8rem; border-top: 1px solid #2c4c6e; }
-        @media (max-width: 700px) { .container { padding: 12px; } .checklist-item { flex-wrap: wrap; } }
+        @media (max-width: 700px) { .container { padding: 12px; } .school-row { flex-direction: column; align-items: flex-start; gap: 8px; } .school-name, .school-progress, .status-icon { width: 100%; } }
     </style>
 </head>
 <body>
@@ -51,30 +58,44 @@
         </div>
     </div>
 
+    <!-- Tela de Login / Cadastro (Escola ou PEC) -->
     <div id="loginPanel">
         <div class="card" style="max-width: 500px; margin: 0 auto;">
-            <h2>🎓 Acesso das Escolas</h2>
-            <div style="margin-bottom: 20px;">
-                <button id="showLoginBtn" class="save-btn" style="background: var(--azul-escuro);">Entrar</button>
-                <button id="showCadastroBtn" class="save-btn" style="background: #6c757d;">Cadastrar Escola</button>
+            <h2>🎓 Acesso ao Sistema</h2>
+            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <button id="showSchoolLoginBtn" class="save-btn" style="background: var(--azul-escuro); flex:1;">🏫 Escola</button>
+                <button id="showPecLoginBtn" class="save-btn" style="background: #6c757d; flex:1;">👩‍🏫 PEC</button>
             </div>
-            <div id="loginForm" style="display: block;">
-                <input type="email" id="loginEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                <input type="password" id="loginPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
-                <button id="doLoginBtn" class="save-btn" style="width:100%; justify-content: center;">Entrar</button>
+            <div id="schoolLoginPanel" style="display: block;">
+                <div style="margin-bottom: 15px;">
+                    <button id="showSchoolLoginFormBtn" class="btn-link" style="background: #6c757d; padding:5px 10px; border-radius:40px;">Entrar</button>
+                    <button id="showSchoolCadastroFormBtn" class="btn-link" style="background: #27ae60; padding:5px 10px; border-radius:40px;">Cadastrar Escola</button>
+                </div>
+                <div id="schoolLoginForm" style="display: block;">
+                    <input type="email" id="loginEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+                    <input type="password" id="loginPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+                    <button id="doLoginBtn" class="save-btn" style="width:100%; justify-content: center;">Entrar</button>
+                </div>
+                <div id="schoolCadastroForm" style="display: none;">
+                    <select id="cadastroEscola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                        <option value="">Selecione sua escola</option>
+                    </select>
+                    <input type="email" id="cadastroEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                    <input type="password" id="cadastroPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
+                    <button id="doCadastroBtn" class="save-btn" style="width:100%; justify-content: center;">Cadastrar</button>
+                </div>
             </div>
-            <div id="cadastroForm" style="display: none;">
-                <select id="cadastroEscola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                    <option value="">Selecione sua escola</option>
-                </select>
-                <input type="email" id="cadastroEmail" placeholder="E-mail da escola" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                <input type="password" id="cadastroPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px;">
-                <button id="doCadastroBtn" class="save-btn" style="width:100%; justify-content: center;">Cadastrar</button>
+            <div id="pecLoginPanel" style="display: none;">
+                <input type="email" id="pecEmail" placeholder="E-mail do PEC" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+                <input type="password" id="pecPassword" placeholder="Senha" style="width:100%; margin:8px 0; padding:12px; border-radius:40px; border:1px solid #ccc;">
+                <button id="doPecLoginBtn" class="save-btn" style="width:100%; justify-content: center;">Entrar como PEC</button>
+                <p style="margin-top:8px; font-size:0.8rem;">⚠️ PECs: utilize seu e-mail institucional. Se não tiver cadastro, solicite à URE.</p>
             </div>
         </div>
     </div>
 
-    <div id="mainPanel" style="display: none;">
+    <!-- Painel da Escola -->
+    <div id="schoolPanel" style="display: none;">
         <div class="tab-bar">
             <button class="tab-button active" data-tab="prova">📝 Prova Paulista</button>
             <button class="tab-button" data-tab="tarefa">💻 Tarefa SP</button>
@@ -90,20 +111,27 @@
             <button id="saveTarefaBtn" class="save-btn"><i class="fas fa-save"></i> Salvar Progresso</button>
         </div>
     </div>
+
+    <!-- Painel do PEC (Dashboard) -->
+    <div id="pecPanel" style="display: none;">
+        <div class="card">
+            <h2><i class="fas fa-chart-line"></i> Dashboard de Progresso das Escolas</h2>
+            <div id="pecDashboard"></div>
+        </div>
+    </div>
     <footer>Checklist oficial 2026 · URE Caieiras</footer>
 </div>
 
 <script>
     (function() {
-        // Evita duplicação
         if (window._checklistInitialized) return;
         window._checklistInitialized = true;
 
-        // ==================== CONFIGURAÇÃO SUPABASE ====================
+// ==================== CONFIGURAÇÃO SUPABASE ====================
         const SUPABASE_URL = 'https://mrpiwlnzbksjvcaxerrr.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_XR4ym7Nz1sL_7Ap5kpmzgw_7mxWANuI';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        // ================================================================
+// ================================================================
 
         const escolasList = [
             "E.E. ADAIL JARBAS DUCLOS", "E.E. AFONSO MORENO", "E.E. ALADINO POLON", "E.E. ALBERTO GRAF – CAPITÃO",
@@ -132,6 +160,22 @@
             "E.E. VINCENZO LOBASSI", "E.E. WALTER RIBAS DE ANDRADE – PROF.", "E.E. WALTHER WEISZFLOG",
             "E.E. ZILTON BICUDO – PROF.", "E.E. OLINDO DÁRTORA – DR."
         ];
+
+        // Definição das datas das semanas
+        const weekDates = {
+            prova: {
+                1: "06/04 a 10/04",
+                2: "13/04 a 17/04",
+                3: "20/04 a 24/04",
+                4: "27/04 a 30/04"
+            },
+            tarefa: {
+                1: "06/04 a 13/04",
+                2: "14/04 a 20/04",
+                3: "21/04 a 27/04",
+                4: "28/04 a 30/04"
+            }
+        };
 
         const checklistsData = {
             prova: {
@@ -193,6 +237,7 @@
 
         let currentUser = null;
         let currentEscola = null;
+        let currentRole = null; // 'school' or 'pec'
         let savedChecklists = { prova: {}, tarefa: {} };
         let activeTab = 'prova';
         let activeWeek = 1;
@@ -217,7 +262,8 @@
         setInterval(updateCountdown, 86400000);
         updateCountdown();
 
-        function renderChecklists() {
+        // ==================== FUNÇÕES DO PAINEL ESCOLA ====================
+        function renderSchoolChecklists() {
             const type = activeTab;
             const data = checklistsData[type];
             const weekKey = `semana${activeWeek}`;
@@ -246,27 +292,29 @@
             });
         }
 
-        function renderWeeks() {
+        function renderSchoolWeeks() {
             const weeks = [1, 2, 3, 4];
             const provaContainer = document.getElementById('provaWeeks');
             const tarefaContainer = document.getElementById('tarefaWeeks');
             provaContainer.innerHTML = '';
             tarefaContainer.innerHTML = '';
             weeks.forEach(w => {
+                const dateRangeProva = weekDates.prova[w];
+                const dateRangeTarefa = weekDates.tarefa[w];
                 const btn1 = document.createElement('button');
-                btn1.innerText = `Semana ${w}`;
+                btn1.innerHTML = `Semana ${w} <span class="date-range">(${dateRangeProva})</span>`;
                 btn1.className = `week-btn ${activeTab === 'prova' && activeWeek === w ? 'active' : ''}`;
-                btn1.onclick = () => { activeWeek = w; renderWeeks(); renderChecklists(); };
+                btn1.onclick = () => { activeWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
                 provaContainer.appendChild(btn1);
                 const btn2 = document.createElement('button');
-                btn2.innerText = `Semana ${w}`;
+                btn2.innerHTML = `Semana ${w} <span class="date-range">(${dateRangeTarefa})</span>`;
                 btn2.className = `week-btn ${activeTab === 'tarefa' && activeWeek === w ? 'active' : ''}`;
-                btn2.onclick = () => { activeWeek = w; renderWeeks(); renderChecklists(); };
+                btn2.onclick = () => { activeWeek = w; renderSchoolWeeks(); renderSchoolChecklists(); };
                 tarefaContainer.appendChild(btn2);
             });
         }
 
-        async function loadUserData() {
+        async function loadSchoolData() {
             if (!currentUser) return;
             const { data, error } = await supabase
                 .from('checklist_escolas')
@@ -289,12 +337,12 @@
                     checklist_data: savedChecklists
                 }]);
             }
-            document.getElementById('userNameDisplay').innerText = `📌 ${currentEscola}`;
-            renderWeeks();
-            renderChecklists();
+            document.getElementById('userNameDisplay').innerHTML = `📌 ${currentEscola}`;
+            renderSchoolWeeks();
+            renderSchoolChecklists();
         }
 
-        async function saveChecklists() {
+        async function saveSchoolChecklists() {
             if (!currentUser) return;
             const { error } = await supabase
                 .from('checklist_escolas')
@@ -304,39 +352,115 @@
             else alert('Progresso salvo com sucesso!');
         }
 
-        async function login(email, password) {
+        // ==================== FUNÇÕES DO PAINEL PEC ====================
+        async function loadPecDashboard() {
+            const { data: escolasRegistradas, error } = await supabase
+                .from('checklist_escolas')
+                .select('*');
+            if (error) {
+                console.error(error);
+                return;
+            }
+            const progressMap = {};
+            escolasRegistradas.forEach(reg => {
+                progressMap[reg.escola_nome] = reg.checklist_data;
+            });
+
+            const dashboardDiv = document.getElementById('pecDashboard');
+            dashboardDiv.innerHTML = '<h3>📋 Acompanhamento das Escolas</h3>';
+            for (const escola of escolasList) {
+                const data = progressMap[escola] || { prova: {}, tarefa: {} };
+                let totalItems = 0;
+                let totalChecked = 0;
+                for (let type of ['prova', 'tarefa']) {
+                    for (let w = 1; w <= 4; w++) {
+                        const weekKey = `semana${w}`;
+                        const items = checklistsData[type][weekKey] || [];
+                        const saved = data[type]?.[weekKey] || {};
+                        totalItems += items.length;
+                        for (let i = 0; i < items.length; i++) {
+                            if (saved[i] === true) totalChecked++;
+                        }
+                    }
+                }
+                const percent = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0;
+                const hasData = totalChecked > 0;
+                const statusIcon = hasData ? (percent === 100 ? '✅' : '⏳') : '❌';
+                const statusText = hasData ? (percent === 100 ? 'Completo' : `${percent}% concluído`) : 'Não iniciado';
+                dashboardDiv.innerHTML += `
+                    <div class="school-row">
+                        <div class="school-name">${escola}</div>
+                        <div class="school-progress">
+                            <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div>
+                            <small>${statusText}</small>
+                        </div>
+                        <div class="status-icon">${statusIcon}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== AUTENTICAÇÃO ====================
+        async function schoolLogin(email, password) {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) { alert('Erro: ' + error.message); return false; }
             currentUser = data.user;
-            await loadUserData();
+            currentRole = 'school';
+            await loadSchoolData();
             return true;
         }
 
-        async function cadastrar(escola, email, password) {
+        async function schoolSignup(escola, email, password) {
             const { data, error } = await supabase.auth.signUp({
                 email, password,
-                options: { data: { escola_nome: escola } }
+                options: { data: { escola_nome: escola, role: 'school' } }
             });
             if (error) { alert('Erro: ' + error.message); return false; }
             alert('Cadastro realizado! Faça login.');
             return true;
         }
 
-        document.getElementById('showLoginBtn').onclick = () => {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('cadastroForm').style.display = 'none';
+        async function pecLogin(email, password) {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) { alert('Erro: ' + error.message); return false; }
+            const role = data.user.user_metadata?.role;
+            if (role !== 'pec') {
+                alert('Acesso negado. Você não tem permissão de PEC.');
+                await supabase.auth.signOut();
+                return false;
+            }
+            currentUser = data.user;
+            currentRole = 'pec';
+            document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC: ${email}`;
+            await loadPecDashboard();
+            return true;
+        }
+
+        // ==================== EVENTOS ====================
+        document.getElementById('showSchoolLoginBtn').onclick = () => {
+            document.getElementById('schoolLoginPanel').style.display = 'block';
+            document.getElementById('pecLoginPanel').style.display = 'none';
         };
-        document.getElementById('showCadastroBtn').onclick = () => {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('cadastroForm').style.display = 'block';
+        document.getElementById('showPecLoginBtn').onclick = () => {
+            document.getElementById('schoolLoginPanel').style.display = 'none';
+            document.getElementById('pecLoginPanel').style.display = 'block';
+        };
+        document.getElementById('showSchoolLoginFormBtn').onclick = () => {
+            document.getElementById('schoolLoginForm').style.display = 'block';
+            document.getElementById('schoolCadastroForm').style.display = 'none';
+        };
+        document.getElementById('showSchoolCadastroFormBtn').onclick = () => {
+            document.getElementById('schoolLoginForm').style.display = 'none';
+            document.getElementById('schoolCadastroForm').style.display = 'block';
             populateEscolas();
         };
         document.getElementById('doLoginBtn').onclick = async () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPassword').value;
-            if (await login(email, pass)) {
+            if (await schoolLogin(email, pass)) {
                 document.getElementById('loginPanel').style.display = 'none';
-                document.getElementById('mainPanel').style.display = 'block';
+                document.getElementById('schoolPanel').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'flex';
             }
         };
         document.getElementById('doCadastroBtn').onclick = async () => {
@@ -344,42 +468,71 @@
             const email = document.getElementById('cadastroEmail').value;
             const pass = document.getElementById('cadastroPassword').value;
             if (!escola || !email || !pass) { alert('Preencha todos os campos'); return; }
-            await cadastrar(escola, email, pass);
+            await schoolSignup(escola, email, pass);
+        };
+        document.getElementById('doPecLoginBtn').onclick = async () => {
+            const email = document.getElementById('pecEmail').value;
+            const pass = document.getElementById('pecPassword').value;
+            if (await pecLogin(email, pass)) {
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('pecPanel').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'flex';
+            }
         };
         document.getElementById('logoutBtn').onclick = async () => {
             await supabase.auth.signOut();
             currentUser = null;
             document.getElementById('loginPanel').style.display = 'block';
-            document.getElementById('mainPanel').style.display = 'none';
+            document.getElementById('schoolPanel').style.display = 'none';
+            document.getElementById('pecPanel').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
+            document.getElementById('pecEmail').value = '';
+            document.getElementById('pecPassword').value = '';
+            document.getElementById('schoolLoginPanel').style.display = 'block';
+            document.getElementById('pecLoginPanel').style.display = 'none';
         };
-        document.getElementById('saveProvaBtn').onclick = saveChecklists;
-        document.getElementById('saveTarefaBtn').onclick = saveChecklists;
+        document.getElementById('saveProvaBtn').onclick = saveSchoolChecklists;
+        document.getElementById('saveTarefaBtn').onclick = saveSchoolChecklists;
 
-        document.querySelectorAll('.tab-button').forEach(btn => {
+        // Abas para escola
+        document.querySelectorAll('#schoolPanel .tab-button').forEach(btn => {
             btn.onclick = () => {
-                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#schoolPanel .tab-button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 activeTab = btn.dataset.tab;
                 document.getElementById('provaPanel').style.display = activeTab === 'prova' ? 'block' : 'none';
                 document.getElementById('tarefaPanel').style.display = activeTab === 'tarefa' ? 'block' : 'none';
                 activeWeek = 1;
-                renderWeeks();
-                renderChecklists();
+                renderSchoolWeeks();
+                renderSchoolChecklists();
             };
         });
 
+        // Verificar sessão existente
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 currentUser = session.user;
-                loadUserData().then(() => {
-                    document.getElementById('loginPanel').style.display = 'none';
-                    document.getElementById('mainPanel').style.display = 'block';
-                });
+                const role = session.user.user_metadata?.role;
+                if (role === 'pec') {
+                    currentRole = 'pec';
+                    loadPecDashboard().then(() => {
+                        document.getElementById('loginPanel').style.display = 'none';
+                        document.getElementById('pecPanel').style.display = 'block';
+                        document.getElementById('userInfo').style.display = 'flex';
+                        document.getElementById('userNameDisplay').innerHTML = `👩‍🏫 PEC: ${session.user.email}`;
+                    });
+                } else {
+                    currentRole = 'school';
+                    loadSchoolData().then(() => {
+                        document.getElementById('loginPanel').style.display = 'none';
+                        document.getElementById('schoolPanel').style.display = 'block';
+                        document.getElementById('userInfo').style.display = 'flex';
+                    });
+                }
             } else {
                 document.getElementById('loginPanel').style.display = 'block';
-                document.getElementById('mainPanel').style.display = 'none';
             }
         });
     })();
