@@ -31,12 +31,14 @@
         .dashboard-table th { background: #f5f5f5; }
         .school-row { cursor: pointer; }
         .school-row:hover { background: #f0f0f0; }
-        .week-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .week-btn { background: #e0e4e9; border: none; padding: 8px 16px; border-radius: 40px; font-weight: 600; cursor: pointer; }
+        .week-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+        .week-btn { background: #e0e4e9; border: none; padding: 8px 16px; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: left; }
         .week-btn.active { background: #d32f2f; color: white; }
+        .week-focus { font-size: 0.7rem; font-weight: normal; display: block; color: #555; }
+        .week-btn.active .week-focus { color: #ffec9e; }
         .checklist-item { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; padding: 8px; border-radius: 16px; background: #f8f9fa; }
         .checklist-item input { margin-top: 3px; width: 20px; height: 20px; accent-color: #0a2f6c; }
-        .date-range { font-size: 0.7rem; color: #666; margin-left: 6px; }
+        .date-range { font-size: 0.7rem; color: #666; margin-left: 6px; font-weight: normal; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; border-radius: 32px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 1.5rem; position: relative; }
         .close-modal { position: absolute; top: 1rem; right: 1.5rem; font-size: 1.8rem; cursor: pointer; color: #666; }
@@ -122,23 +124,80 @@
             "E.E. ZILTON BICUDO – PROF.", "E.E. OLINDO DÁRTORA – DR."
         ];
 
-        const weekDates = {
-            prova: { 1: "06/04 a 10/04", 2: "13/04 a 17/04", 3: "20/04 a 24/04", 4: "27/04 a 30/04" },
-            tarefa: { 1: "06/04 a 13/04", 2: "14/04 a 20/04", 3: "21/04 a 27/04", 4: "28/04 a 30/04" }
-        };
-
-        const checklistsData = {
+        // Datas e focos conforme PDF
+        const weekMeta = {
             prova: {
-                semana1: [ "Repassar com a equipe informações essenciais (modelos de prova, regras de aplicação, conduta dos aplicadores)", "Organizar equipe de aplicadores e salas necessárias", "Planejar atendimento da educação especial (tempo extra, sala extra, apoio especializado)", "Preparar ambiente com silêncio, organização e acessibilidade", "Reforçar regras de aplicação e reconhecimento do caderno/cartão de resposta", "Garantir locais adequados para recebimento das provas" ],
-                semana2: [ "Na URE, conferir quantidade de caixas, lacres e identificação externa", "Verificar nas caixas qual delas contém as etiquetas dos estudantes e comunicar divergências", "Abrir as caixas para conferir a quantidade de envelopes (sem abrir os envelopes)", "Abrir os envelopes apenas nos dias de aplicação (14 a 17/04)", "Antes de iniciar: registrar horário na lousa, recolher celulares e organizar mochilas", "Distribuir as provas corretamente por cor (roxo, verde, laranja)", "Após início da prova, colar etiqueta nominal, conferir cabeçalho e coletar assinatura", "Garantir prova individual, uso de caneta azul/preta e tempo entre 1h e 2h30", "Recolher todos os cadernos e não destacar a folha de respostas", "Subir os cartões-resposta no mesmo dia, conferindo antes de salvar" ],
-                semana3: [ "Finalizar a leitura de cartões pendentes (até 23/04)", "Usar fluxo manual em caso de problema com foto ou falta de etiqueta", "Revisar qualidade das imagens (folha inteira, reta, sem sombra, sem corte)" ],
-                semana4: [ "Acompanhar publicação dos resultados no Diário de Classe (30/04)", "Organizar devolutiva interna com equipe gestora e pedagógica" ]
+                1: { dateRange: "06/04 a 10/04", focus: "Preparação" },
+                2: { dateRange: "13/04 a 19/04", focus: "Recebimento / Aplicação" },
+                3: { dateRange: "20/04 a 26/04", focus: "Pendências" },
+                4: { dateRange: "27/04 a 30/04", focus: "Resultados" }
             },
             tarefa: {
-                semana1: [ "Informar professores e estudantes sobre a janela de realização (06 a 13/04)", "Organizar quando os estudantes farão as tarefas (aula, contraturno, reforço ou casa)", "Acompanhar se todos acessaram as quatro tarefas previstas", "Orientar os estudantes a finalizar dentro do prazo", "Orientar professores sobre uso da ferramenta para verificar aprendizagem", "Explicar que a discursiva passa por correção assistida por IA" ],
-                semana2: [ "Mapear tarefas em rascunho, submetidas e pendentes", "Apoiar estudantes cuja resposta discursiva foi devolvida como pendente", "Identificar barreiras de uso (tempo, valor pedagógico, acesso/infraestrutura)" ],
-                semana3: [ "Verificar quantas tarefas foram realizadas no prazo", "Verificar quantas ficaram fora do prazo, incompletas ou não realizadas", "Priorizar ações com turmas e estudantes com maior número de pendências" ],
-                semana4: [ "Usar os dados disponíveis para devolutiva pedagógica e planejamento de retomadas", "Registrar percepções da equipe sobre engajamento e dificuldades" ]
+                1: { dateRange: "06/04 a 13/04", focus: "Execução da janela" },
+                2: { dateRange: "14/04 a 20/04", focus: "Acompanhamento" },
+                3: { dateRange: "21/04 a 27/04", focus: "Monitoramento" },
+                4: { dateRange: "28/04 a 30/04", focus: "Fechamento" }
+            }
+        };
+
+        // Checklists exatamente conforme PDF
+        const checklistsData = {
+            prova: {
+                semana1: [
+                    "Repassar com a equipe informações essenciais (modelos de prova, regras de aplicação, conduta dos aplicadores etc.)",
+                    "Organizar equipe de aplicadores e salas necessárias.",
+                    "Planejar atendimento da educação especial garantindo tempo extra, sala extra e apoio especializado.",
+                    "Preparar ambiente com silêncio, organização e acessibilidade.",
+                    "Reforçar regras de aplicação e reconhecimento do caderno/cartão de resposta.",
+                    "Garantir locais adequados para recebimento das provas."
+                ],
+                semana2: [
+                    "Na URE, conferir quantidade de caixas, lacres e identificação externa e receber as caixas de prova da escola.",
+                    "Verificar, nas caixas, qual delas contém as etiquetas dos estudantes e comunicar imediatamente à URE qualquer divergência.",
+                    "Abrir as caixas para conferir a quantidade de envelopes.",
+                    "Não abrir os envelopes nesse dia.",
+                    "Abrir os envelopes apenas nos dias de aplicação e conferir dia, série e cor da prova.",
+                    "Antes de iniciar: registrar horário na lousa, recolher celulares desligados e organizar mochilas na frente da sala.",
+                    "Distribuir as provas corretamente, por cor: roxo, verde e laranja para turmas regulares; amarela para VOAR.",
+                    "Após o início da prova, colar a etiqueta nominal nos cadernos, conferir cabeçalho e coletar a assinatura do estudante.",
+                    "Garantir prova individual, uso de caneta azul/preta e tempo entre 1h e 2h30.",
+                    "Ao final, recolher todos os cadernos e não destacar a folha de respostas.",
+                    "Subir os cartões-resposta no mesmo dia, conferindo turma, prova, estudante e alternativas antes de salvar.",
+                    "Garantir que os cartões-resposta subiram até, no máximo, dia 17."
+                ],
+                semana3: [
+                    "Finalizar a leitura de cartões que tenham ficado pendentes por algum problema. Lembrando que este prazo deve ser utilizado apenas em casos excepcionais.",
+                    "Usar o fluxo manual em caso de problema com foto ou falta de etiqueta.",
+                    "Revisar a qualidade das imagens: folha inteira, reta, sem sombra, sem reflexo e sem corte."
+                ],
+                semana4: [
+                    "Acompanhar a publicação dos resultados no Diário de Classe.",
+                    "Organizar devolutiva interna com a equipe gestora e pedagógica."
+                ]
+            },
+            tarefa: {
+                semana1: [
+                    "Informar professores e estudantes sobre a janela de realização.",
+                    "Organizar quando os estudantes farão as tarefas: aula, contraturno, reforço ou casa.",
+                    "Acompanhar se todos os estudantes acessaram as quatro tarefas previstas.",
+                    "Orientar os estudantes a finalizar dentro do prazo.",
+                    "Orientar os professores sobre o uso da ferramenta para verificar aprendizagem e apoiar o planejamento.",
+                    "Explicar que a discursiva passa por correção assistida por IA e pode exigir acompanhamento posterior."
+                ],
+                semana2: [
+                    "Mapear tarefas em rascunho, submetidas e pendentes para refazer.",
+                    "Apoiar estudantes cuja resposta discursiva foi devolvida como pendente.",
+                    "Identificar barreiras de uso: tempo, valor pedagógico, acesso/infraestrutura ou priorização de outras estratégias."
+                ],
+                semana3: [
+                    "Verificar quantas tarefas foram realizadas no prazo.",
+                    "Verificar quantas ficaram fora do prazo, incompletas ou não realizadas.",
+                    "Priorizar ações com turmas e estudantes com maior número de pendências."
+                ],
+                semana4: [
+                    "Usar os dados disponíveis para apoiar devolutiva pedagógica e planejamento de retomadas.",
+                    "Registrar percepções da equipe sobre engajamento e dificuldades de uso da ferramenta."
+                ]
             }
         };
 
@@ -230,7 +289,7 @@
             }
         }
 
-        // Modal (igual ao anterior, mas sem mudanças)
+        // Modal
         let currentModalSchool = null, currentModalData = null, modalActiveTab = 'prova', modalActiveWeek = 1;
         function openSchoolModal(escolaNome, checklistData) {
             currentModalSchool = escolaNome;
@@ -246,13 +305,15 @@
             const tarefaContainer = document.getElementById('modalTarefaWeeks');
             provaContainer.innerHTML = ''; tarefaContainer.innerHTML = '';
             weeks.forEach(w => {
+                const meta = weekMeta.prova[w];
                 const btn1 = document.createElement('button');
-                btn1.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.prova[w]})</span>`;
+                btn1.innerHTML = `Semana ${w} <span class="date-range">(${meta.dateRange})</span><span class="week-focus">${meta.focus}</span>`;
                 btn1.className = `week-btn ${modalActiveTab === 'prova' && modalActiveWeek === w ? 'active' : ''}`;
                 btn1.onclick = () => { modalActiveWeek = w; renderModalWeeks(); renderModalChecklist(); };
                 provaContainer.appendChild(btn1);
+                const metaT = weekMeta.tarefa[w];
                 const btn2 = document.createElement('button');
-                btn2.innerHTML = `Semana ${w} <span class="date-range">(${weekDates.tarefa[w]})</span>`;
+                btn2.innerHTML = `Semana ${w} <span class="date-range">(${metaT.dateRange})</span><span class="week-focus">${metaT.focus}</span>`;
                 btn2.className = `week-btn ${modalActiveTab === 'tarefa' && modalActiveWeek === w ? 'active' : ''}`;
                 btn2.onclick = () => { modalActiveWeek = w; renderModalWeeks(); renderModalChecklist(); };
                 tarefaContainer.appendChild(btn2);
